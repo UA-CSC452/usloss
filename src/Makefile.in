@@ -1,9 +1,9 @@
 
 VERSION=2.11
 
-srcdir = .
-prefix = /Users/johartma
-exec_prefix =   ${prefix}
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix =   @exec_prefix@
 
 # List of object files to generate (and the list of source files, generated
 # by pattern substitution)
@@ -25,18 +25,18 @@ LDFLAGS = -L.
 TARGET=libusloss$(VERSION).a
 
 
-AC_FLAGS =		-DHAVE_CONFIG_H
-INSTALL =		/usr/bin/install -c
-INSTALL_PROGRAM =	${INSTALL}
-INSTALL_DATA =		${INSTALL} -m 644
+AC_FLAGS =		@DEFS@
+INSTALL =		@INSTALL@
+INSTALL_PROGRAM =	@INSTALL_PROGRAM@
+INSTALL_DATA =		@INSTALL_DATA@
 RANLIB =		@RANLIB@
-LN_S =			ln -s
-SRC_DIR =		.
-
-CC =			gcc
+LN_S =			@LN_S@
+SRC_DIR =		@srcdir@
+VPATH =			@srcdir@
+CC =			@CC@
 LD = 			@LD@
-LIB_DIR = 		${exec_prefix}/lib
-INC_DIR	= 	    ${prefix}/include
+LIB_DIR = 		@libdir@
+INC_DIR	= 	    @includedir@
 
 
 ifeq ($(shell uname),Darwin)
