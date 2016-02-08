@@ -19,9 +19,11 @@ static void starter(void) {
     rpt_sim_trap("startup returned!\n");
 }
 
+static char stack[USLOSS_MIN_STACK];
+
+
 int main(int argc, char **argv)
 {
-    char stack[USLOSS_MIN_STACK];
     unsigned int psr;
     setup();
     /*  Call the per-module initialization routines */
