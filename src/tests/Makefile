@@ -1,5 +1,5 @@
 
-VERSION=2.11
+VERSION=2.12
 CC=gcc
 CFLAGS=-g -I.. -Wall -L..
 CFLAGS += -Wno-int-to-void-pointer-cast

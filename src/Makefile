@@ -1,8 +1,8 @@
 
-VERSION=2.11
+VERSION=2.12
 
 srcdir = .
-prefix = /Users/johartma
+prefix = /Users/johartma/cs452/452-students
 exec_prefix =   ${prefix}
 
 # List of object files to generate (and the list of source files, generated
@@ -35,7 +35,7 @@ SRC_DIR =		.
 
 CC =			gcc
 LD = 			@LD@
-LIB_DIR = 		${exec_prefix}/lib
+LIB_DIR = 		/Users/johartma/cs452/452-students/lib/macosx
 INC_DIR	= 	    ${prefix}/include
 
 
