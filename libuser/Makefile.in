@@ -1,0 +1,36 @@
+
+srcdir = @srcdir@
+prefix = @prefix@
+exec_prefix =   @exec_prefix@
+
+AC_FLAGS =              @DEFS@
+INSTALL =               @INSTALL@
+INSTALL_PROGRAM =       @INSTALL_PROGRAM@
+INSTALL_DATA =          @INSTALL_DATA@
+CC = 			@CC@
+LD = 			@LD@
+LIB_DIR = 		@libdir@
+INC_DIR	= 	    @includedir@
+CFLAGS =        @CFLAGS@
+
+COBJS = libuser.o
+CFLAGS += -Wall -g -I. -I$(INCDIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
+TARGET = libuser.a
+
+ifeq ($(shell uname),Darwin)
+	CFLAGS += -D_XOPEN_SOURCE
+endif
+
+
+$(TARGET):	$(COBJS)
+		$(AR) -r $@ $(COBJS) 
+
+install:	$(TARGET)
+		mkdir -p $(INC_DIR) $(LIB_DIR)
+		$(INSTALL_DATA) libuser.h $(INC_DIR)
+		$(INSTALL_DATA) $(TARGET) $(LIB_DIR)
+
+libuser.o:	libuser.h libuser.c
+
+clean:
+	rm -f $(COBJS) $(TARGET) 
