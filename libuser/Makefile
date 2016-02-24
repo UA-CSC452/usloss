@@ -1,6 +1,6 @@
 
 srcdir = .
-prefix = /Users/johartma/452-students
+prefix = /home/jhh/452-students
 exec_prefix =   ${prefix}
 
 AC_FLAGS =              -DHAVE_CONFIG_H
@@ -9,12 +9,12 @@ INSTALL_PROGRAM =       ${INSTALL}
 INSTALL_DATA =          ${INSTALL} -m 644
 CC = 			gcc
 LD = 			@LD@
-LIB_DIR = 		/Users/johartma/452-students/lib/macosx
+LIB_DIR = 		/home/jhh/452-students/lib/linux
 INC_DIR	= 	    ${prefix}/include
 CFLAGS =        -g -O2
 
 COBJS = libuser.o
-CFLAGS += -Wall -g -I. -I$(INCDIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
+CFLAGS += -Wall -g -I. -I$(INC_DIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 TARGET = libuser.a
 
 ifeq ($(shell uname),Darwin)

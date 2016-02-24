@@ -14,7 +14,7 @@ INC_DIR	= 	    @includedir@
 CFLAGS =        @CFLAGS@
 
 COBJS = libuser.o
-CFLAGS += -Wall -g -I. -I$(INCDIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
+CFLAGS += -Wall -g -I. -I$(INC_DIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
 TARGET = libuser.a
 
 ifeq ($(shell uname),Darwin)
