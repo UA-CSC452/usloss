@@ -1,4 +1,5 @@
 
+VERSION = 1.0
 srcdir = @srcdir@
 prefix = @prefix@
 exec_prefix =   @exec_prefix@
@@ -15,7 +16,7 @@ CFLAGS =        @CFLAGS@
 
 COBJS = libuser.o
 CFLAGS += -Wall -g -I. -I$(INCDIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
-TARGET = libuser.a
+TARGET = libuser$(VERSION).a
 
 ifeq ($(shell uname),Darwin)
 	CFLAGS += -D_XOPEN_SOURCE
