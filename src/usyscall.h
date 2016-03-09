@@ -28,7 +28,7 @@
 #define SYS_GETTIMEOFDAY	20
 #define SYS_CPUTIME		21
 #define SYS_GETPID		22
-#define SYS_DUMPPROCESSES 23
+#define SYS_DUMPPROCESSES       23
 
 #ifdef PHASE_3
 #define SYS_VMINIT		24
