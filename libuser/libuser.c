@@ -346,7 +346,7 @@ void Sys_DumpProcesses(void)
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_GETPID;
+    sa.number = SYS_DUMPPROCESSES;
     USLOSS_Syscall((void *) &sa);
     return;
 } /* end of DumpProcesses */

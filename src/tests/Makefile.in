@@ -1,7 +1,7 @@
 
 VERSION=2.12
 CC=gcc
-CFLAGS=-g -I.. -Wall -L..
+CFLAGS += -std=gnu99 -g -I.. -Wall -L..
 CFLAGS += -Wno-int-to-void-pointer-cast
 LDFLAGS=-L.. -v
 LIB=-lusloss$(VERSION)
