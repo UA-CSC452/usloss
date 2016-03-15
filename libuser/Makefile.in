@@ -1,5 +1,5 @@
 
-VERSION = 1.1
+VERSION = 1.2
 srcdir = @srcdir@
 prefix = @prefix@
 exec_prefix =   @exec_prefix@
@@ -30,6 +30,7 @@ install:	$(TARGET)
 		mkdir -p $(INC_DIR) $(LIB_DIR)
 		$(INSTALL_DATA) libuser.h $(INC_DIR)
 		$(INSTALL_DATA) $(TARGET) $(LIB_DIR)
+		$(INSTALL_DATA) libuser.c $(prefix)/libuser
 
 libuser.o:	libuser.h libuser.c
 
