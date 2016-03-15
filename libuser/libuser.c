@@ -695,7 +695,7 @@ int Sys_MboxSend(int mbox, void *msg, int *size)
     sa.arg2 = msg;
     sa.arg3 = (void *) *size;
     USLOSS_Syscall((void *) &sa);
-    *size = (int) sa.arg2;
+    *size = (int) sa.arg3;
     return (int) sa.arg4;
 } /* end of MboxSend */
 
@@ -747,7 +747,7 @@ int Sys_MboxCondSend(int mbox, void *msg, int *size)
     sa.arg2 = msg;
     sa.arg3 = (void *) *size;
     USLOSS_Syscall((void *) &sa);
-    *size = (int) sa.arg2;
+    *size = (int) sa.arg3;
     return (int) sa.arg4;
 }
 
