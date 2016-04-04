@@ -198,6 +198,9 @@ void USLOSS_ContextSwitch(USLOSS_Context *old_context, USLOSS_Context *new_conte
         check_interrupts();
         err_return = swapcontext(&old_context->context, 
                         &new_context->context);
+        if ((psr & ~USLOSS_PSR_MASK) != USLOSS_PSR_MAGIC) {
+            usloss_assert(0, "corrupted psr");
+        }
         current_psr = psr;
     }
     usloss_sys_assert(err_return != -1, "context swap error in "
