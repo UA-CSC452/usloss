@@ -1,11 +1,11 @@
 
-VERSION=2.12
+VERSION=2.13
 CC=gcc
 CFLAGS += -std=gnu99 -g -I.. -Wall -L..
 CFLAGS += -Wno-int-to-void-pointer-cast
 LDFLAGS=-L.. -v
 LIB=-lusloss$(VERSION)
-TESTS = psr psr2 psr3 clock context interrupt syscall mmu syscall2 mmu2 context0 mmu3
+TESTS = $(patsubst %.c,%,$(wildcard *.c))
 
 ifeq ($(shell uname),Darwin)
 	CFLAGS += -D_XOPEN_SOURCE
