@@ -1,5 +1,5 @@
 
-VERSION = 1.2
+VERSION = 1.3
 srcdir = @srcdir@
 prefix = @prefix@
 exec_prefix =   @exec_prefix@
@@ -16,6 +16,7 @@ CFLAGS =        @CFLAGS@
 
 COBJS = libuser.o
 CFLAGS += -Wall -g -I. -I$(INC_DIR) -Wno-pointer-to-int-cast -Wno-int-to-pointer-cast
+CFLAGS += -DPHASE_3
 TARGET = libuser$(VERSION).a
 
 ifeq ($(shell uname),Darwin)

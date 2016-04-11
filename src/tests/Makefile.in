@@ -16,8 +16,8 @@ endif
 
 all: $(TESTS)
 
-$(TESTS) : %: %.c stubs.o ../libusloss$(VERSION).a
-	$(CC) $(CFLAGS) $< stubs.o -o $@ $(LIB)
+$(TESTS) : %: %.c ../libusloss$(VERSION).a
+	$(CC) $(CFLAGS) $< -o $@ $(LIB)
 
 clean:
 	rm -f *.o $(TESTS) core* term?.out
