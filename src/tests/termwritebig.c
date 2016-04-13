@@ -92,4 +92,3 @@ cleanup()
         assert(!memcmp(input, output, SIZE));
     }
 }
-

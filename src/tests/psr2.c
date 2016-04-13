@@ -20,3 +20,5 @@ finish() {
     USLOSS_Console("finish\n");
     USLOSS_Console("psr = %d\n", USLOSS_PsrGet());
 }
+void setup(void) {}
+void cleanup(void) {}

@@ -31,3 +31,5 @@ finish(void)
 {
     USLOSS_Console("Finishing\n");
 }
+void setup(void) {}
+void cleanup(void) {}

@@ -101,3 +101,5 @@ startup()
 
 void
 finish() {}
+void setup(void) {}
+void cleanup(void) {}
