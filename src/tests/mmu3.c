@@ -27,8 +27,9 @@ startup(int argc, char **argv)
     char        *segment;
     int         size;
     USLOSS_PTE  pageTable[2];
+    int         i;
 
-    for (int i = 0; i < 2; i++) {
+    for (i = 0; i < 2; i++) {
         pageTable[i].incore = 0;
         pageTable[i].read = 1;
         pageTable[i].write = 1;

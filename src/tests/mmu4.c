@@ -173,12 +173,13 @@ startup(int argc, char **argv)
 {
     int		   status;
     int		   pages;
+    int        i;
 
     test = atoi(argv[1]);
-    for (int i = 0; i < USLOSS_NUM_INTS; i++) {
+    for (i = 0; i < USLOSS_NUM_INTS; i++) {
         USLOSS_IntVec[i] = Handler;
     }
-    for (int i = 0; i < NUMPAGES; i++) {
+    for (i = 0; i < NUMPAGES; i++) {
         pageTable[i].incore = 0;
         pageTable[i].read = 0;
         pageTable[i].write = 0;
