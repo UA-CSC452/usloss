@@ -1023,6 +1023,7 @@ USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable)
 {
     int         numPages;
     int         status;
+    int         i;
 
     check_kernel_mode("USLOSS_MmuSetPageTable");
     if (mmuPtr == NULL) {
@@ -1037,7 +1038,7 @@ USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable)
 
     // Remove existing mappings.
 
-    for (int i = 0; i < numPages; i++) {
+    for (i = 0; i < numPages; i++) {
         status = Unmap(0, i);
         switch (status) {
             case USLOSS_MMU_OK:
@@ -1052,7 +1053,7 @@ USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable)
 
     if (pageTable != NULL) {
         // Add new mappings.
-        for (int i = 0; i < numPages; i++) {
+        for (i = 0; i < numPages; i++) {
             if (pageTable[i].incore) {
                 int protection = USLOSS_MMU_PROT_NONE;
                 if ((pageTable[i].read == 1) && (pageTable[i].write == 0)) {
