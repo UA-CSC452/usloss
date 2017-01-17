@@ -58,26 +58,7 @@ void
 startup(int argc, char **argv)
 {
     int	status;
-    int i, j, k;
-    FILE    *f;
-    char    name[50];
-    int     n;
-
-    // Compute the inputs and write them to the term*.in file. Each terminal reads unique content.
-    k = 0;
-    for(i = 0; i < USLOSS_TERM_UNITS; i++) {
-        memset(buffers[i], '\0', NUMCHARS);
-        counts[i] = 0;
-        snprintf(name, sizeof(name), "term%d.in", i);
-        f = fopen(name, "w");
-        assert(f != NULL);
-        for (j = 0; j < NUMCHARS; j++) {
-            inputs[i][j] = 'a' + k++;
-        }
-        n = fwrite(inputs[i], 1, NUMCHARS, f);
-        assert(n == NUMCHARS);
-        fclose(f);
-    }
+    int i;
 
     for (i = 0; i < USLOSS_NUM_INTS; i++) {
 	   USLOSS_IntVec[i] = dummy_handler;
@@ -102,5 +83,26 @@ startup(int argc, char **argv)
 
 void
 finish(int argc, char **argv) {}
-void test_setup(int argc, char **argv) {}
+void test_setup(int argc, char **argv) {
+    int i,j,k;
+    FILE    *f;
+    char    name[50];
+    int     n;
+
+    // Compute the inputs and write them to the term*.in file. Each terminal reads unique content.
+    k = 0;
+    for(i = 0; i < USLOSS_TERM_UNITS; i++) {
+        memset(buffers[i], '\0', NUMCHARS);
+        counts[i] = 0;
+        snprintf(name, sizeof(name), "term%d.in", i);
+        f = fopen(name, "w");
+        assert(f != NULL);
+        for (j = 0; j < NUMCHARS; j++) {
+            inputs[i][j] = 'a' + k++;
+        }
+        n = fwrite(inputs[i], 1, NUMCHARS, f);
+        assert(n == NUMCHARS);
+        fclose(f);
+    }
+}
 void test_cleanup(int argc, char **argv) {}
