@@ -1059,6 +1059,8 @@ USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable)
                     protection = USLOSS_MMU_PROT_READ;
                 } else if ((pageTable[i].read == 1) && (pageTable[i].write == 1)) {
                     protection = USLOSS_MMU_PROT_RW;
+                } else if ((pageTable[i].read == 0) && (pageTable[i].write == 0)) {
+                    protection = USLOSS_MMU_PROT_NONE;
                 } else {
                     status = USLOSS_MMU_ERR_PROT;
                     goto done;

@@ -82,6 +82,6 @@ $(COBJS): usloss.h Makefile
 
 install: $(TARGET) 
 	mkdir -p $(INC_DIR) $(LIB_DIR)
-	$(INSTALL_DATA) usloss.h usyscall.h mmu.h $(INC_DIR)
+	$(INSTALL_DATA) usloss.h usyscall.h $(INC_DIR)
 	$(INSTALL_DATA) $(TARGET) $(LIB_DIR)
 # DO NOT DELETE

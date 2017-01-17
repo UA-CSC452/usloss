@@ -83,7 +83,7 @@ startup(int argc, char **argv)
 
     assert(*(segment + size) == 'A');
 
-    USLOSS_Console("All tests passed.\n");
+    //USLOSS_Console("All tests passed.\n");
     USLOSS_Halt(0);
 }
 

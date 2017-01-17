@@ -92,7 +92,6 @@ Handler(int type, void *offsetArg)
     int		tmp;
     int		offset = (int) offsetArg;
 
-    USLOSS_Console("test handler\n");
     CheckPage(page, offset);
     cause = CheckCause(cause);
     if (cause == USLOSS_MMU_FAULT) { 
@@ -175,7 +174,7 @@ Test1(void)
     int		frame;
     int		dummy;
 
-    USLOSS_Console("Test 1\n");
+    //USLOSS_Console("Test 1\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_RW);
@@ -203,7 +202,7 @@ Test2(void)
     int		frame;
     int		dummy;
 
-    USLOSS_Console("Test 2\n");
+    //USLOSS_Console("Test 2\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_NONE);
@@ -228,7 +227,7 @@ Test3(void)
     int		frame;
     int		dummy;
 
-    USLOSS_Console("Test 3\n");
+    //USLOSS_Console("Test 3\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_READ);
@@ -257,7 +256,7 @@ Test4(void)
     int		dummy;
     int		status;
 
-    USLOSS_Console("Test 4\n");
+    //USLOSS_Console("Test 4\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_RW);
@@ -306,7 +305,7 @@ Test5(void)
     char	*addr;
     static char	*msg = "Hello world"; 
 
-    USLOSS_Console("Test 5\n");
+    //USLOSS_Console("Test 5\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_RW);
@@ -317,7 +316,7 @@ Test5(void)
     addr = PageAddr(page+1);
     Expect(page+1, USLOSS_MMU_FAULT);
     if (strcmp(addr, msg)) {
-	USLOSS_Console("Page sharing failed\n");
+	   USLOSS_Console("Page sharing failed\n");
     }
 }
 /*
@@ -332,7 +331,7 @@ Test6(void)
     int		frame;
     static char	*msg = "Hello world"; 
 
-    USLOSS_Console("Test 6\n");
+    //USLOSS_Console("Test 6\n");
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_RW);
@@ -361,7 +360,7 @@ Test7(void)
     int		result;
     static char	*msgs[2] = {"Hello world", "Happy Birthday"}; 
 
-    USLOSS_Console("Test 7\n");
+    //USLOSS_Console("Test 7\n");
     page = 1;
     addr = PageAddr(page);
 
@@ -392,8 +391,8 @@ Test7(void)
 void
 Test8(void)
 {
-    USLOSS_Console("Test 8\n");
-    USLOSS_Console("This should cause a segmentation violation.\n");
+    //USLOSS_Console("Test 8\n");
+    //USLOSS_Console("This should cause a segmentation violation.\n");
     *((volatile int *) NULL) = 0;
     USLOSS_Console("Test 8 still running?\n");
 }
@@ -425,9 +424,9 @@ startup(int argc, char **argv)
     int		dummy;
 
     pageSize = USLOSS_MmuPageSize();
-    USLOSS_Console("Page size = %d\n", pageSize);
+    //USLOSS_Console("Page size = %d\n", pageSize);
     for (i = 0; i < USLOSS_NUM_INTS; i++) {
-	USLOSS_IntVec[i] = dummy_handler;
+	   USLOSS_IntVec[i] = dummy_handler;
     }
     USLOSS_IntVec[USLOSS_MMU_INT] = Handler;
 
@@ -460,7 +459,7 @@ startup(int argc, char **argv)
     DoTest(Test5);
     DoTest(Test6);
     DoTest(Test7);
-    USLOSS_Console("All simple tests completed.\n");
+    //USLOSS_Console("All simple tests completed.\n");
     DoTest(Test8);
     USLOSS_Halt(0);
 }

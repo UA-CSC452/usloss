@@ -101,6 +101,24 @@ class MMU(Base):
     def test_mmu3(self):
         self.CheckStatus(['tests/mmu3'], 0)
 
+    def test_no_access(self):
+        self.CheckStatus(['tests/mmu4', 0], 0)
+
+    def test_readonly(self):
+        self.CheckStatus(['tests/mmu4', 1], 0)
+
+    def test_readwrite(self):
+        self.CheckStatus(['tests/mmu4', 2], 0)
+
+    def test_make_no_access(self):
+        self.CheckStatus(['tests/mmu4', 3], 0)
+
+    def test_make_readonly(self):
+        self.CheckStatus(['tests/mmu4', 4], 0)
+
+    def test_pagefault(self):
+        self.CheckStatus(['tests/mmu4', 5], 0)
+
 def main(args):
     global options
     usage = "Usage %prog [options] [test0 test1 ...]"
