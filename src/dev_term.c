@@ -34,6 +34,8 @@ static TermInfo terms[USLOSS_TERM_UNITS];
     (status) &= ~0xff00;\
     (status) |= (((ch) & 0xff) << 8);
 
+#ifdef NOTDEF
+
 static char *status2str[] = {"ready", "busy", "error"};
 
 static void
@@ -57,6 +59,8 @@ print_control(int control) {
     }
     printf("\n");
 }
+
+#endif
 
 /* 
  *  Open a file or "/dev/null" if file nonexistent
