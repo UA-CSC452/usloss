@@ -13,19 +13,21 @@
 
 static USLOSS_Context startup_context;
 dynamic_def(USLOSS_Context finish_context);
-
-static void starter(void) {
-    startup();
-    rpt_sim_trap("startup returned!\n");
-}
+dynamic_def(int finish_status);
 
 static char stack[USLOSS_MIN_STACK];
+static int gargc;
+static char **gargv;
 
+static void starter(void) {
+    startup(gargc, gargv);
+    rpt_sim_trap("startup returned!\n");
+}
 
 int main(int argc, char **argv)
 {
     unsigned int psr;
-    setup();
+    test_setup(argc, argv);
     /*  Call the per-module initialization routines */
     globals_init();
     devices_init();
@@ -35,6 +37,8 @@ int main(int argc, char **argv)
     term_init();
     sig_ints_init();	/*  Must disable interrupts */
 
+    gargc = argc;
+    gargv = argv;
     /*  Set up the initial context that runs the user's startup code */
     getcontext(&startup_context.context);
     startup_context.context.uc_stack.ss_sp = stack;
@@ -52,8 +56,8 @@ int main(int argc, char **argv)
     /*  Finished from swapcontext() - user has called USLOSS_Halt.  We will call
 	their finish() routine and exit */
     current_psr = psr;
-    finish();
-    cleanup();
-    exit(0);
+    finish(argc, argv);
+    test_cleanup(argc, argv);
+    exit(finish_status);
 }
 

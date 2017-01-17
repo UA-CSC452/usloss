@@ -38,7 +38,7 @@ dummy_handler(int type, void *arg)
 }
 
 void
-startup()
+startup(int argc, char **argv)
 {
     int	status;
     int i;
@@ -57,23 +57,26 @@ startup()
     for (i = 0; i < USLOSS_TERM_UNITS; i++) {
         counts[i] = 0;
         status = USLOSS_DeviceOutput(USLOSS_TERM_DEV, i, (void *) control);
+        assert(status == USLOSS_DEV_OK);
     }
     // Turn on interrupts.
-    USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    status = USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    assert(status == USLOSS_ERR_OK);
     // Wait in an infinite loops for interrupts.
     while(1) {
 	   USLOSS_WaitInt();
     }
+    // Never gets here.
 }
 
 void
-finish() {}
+finish(int argc, char **argv) {}
 
 void 
-setup() {}
+test_setup(int argc, char **argv) {}
 
 void
-cleanup() 
+test_cleanup(int argc, char **argv) 
 {
     FILE    *f;
     char input[SIZE];

@@ -55,7 +55,7 @@ dummy_handler(int type, void *arg)
 }
 
 void
-startup()
+startup(int argc, char **argv)
 {
     int	status;
     int i, j, k;
@@ -90,7 +90,8 @@ startup()
     USLOSS_IntVec[USLOSS_TERM_INT] = term_handler;
 
     // Turn on interrupts.
-    USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    status = USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    assert(status == USLOSS_ERR_OK);
 
     // Read from the terminals.
     while(done < USLOSS_TERM_UNITS ) {
@@ -100,6 +101,6 @@ startup()
 }
 
 void
-finish() {}
-void setup(void) {}
-void cleanup(void) {}
+finish(int argc, char **argv) {}
+void test_setup(int argc, char **argv) {}
+void test_cleanup(int argc, char **argv) {}

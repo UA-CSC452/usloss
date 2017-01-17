@@ -13,49 +13,55 @@
 #include <ucontext.h>
 
 typedef struct USLOSS_Context {
-    void		(*start)();	/* Starting routine. */
-    unsigned int	initial_psr;	/* Initial PSR */
-    ucontext_t		context;	/* Internal context state */
+    void		         (*start)(void);	/* Starting routine. */
+    ucontext_t	         context;	    /* Internal context state */
+    struct USLOSS_PTE    *pageTable;     /* Page table, if any. */
 } USLOSS_Context;
 
 /*  Function prototypes for USLOSS functions */
-extern int		USLOSS_DeviceInput(unsigned int dev, int unit, int *status);
-extern int		USLOSS_DeviceOutput(unsigned int dev, int unit, void *arg);
+extern int		USLOSS_DeviceInput(unsigned int dev, int unit, int *status) __attribute__((warn_unused_result));
+extern int		USLOSS_DeviceOutput(unsigned int dev, int unit, void *arg) __attribute__((warn_unused_result));
 extern void		USLOSS_WaitInt(void);
-extern void		USLOSS_Halt(int dumpcore);
-extern void		USLOSS_Console(char *string, ...);
-extern void		USLOSS_VConsole(char *string, va_list ap);
-extern void		USLOSS_Trace(char *string, ...);
-extern void		USLOSS_VTrace(char *string, va_list ap);
-extern void		USLOSS_ContextInit(USLOSS_Context *state, unsigned int psr,
-			    char *stack, int stackSize, void (*func)(void));
+extern void     USLOSS_Halt(int status);
+extern void     USLOSS_Abort(char *fmt, ...);
+extern void		USLOSS_Console(char *fmt, ...);
+extern void		USLOSS_VConsole(char *fmt, va_list ap);
+extern void		USLOSS_Trace(char *fmt, ...);
+extern void		USLOSS_VTrace(char *fmt, va_list ap);
+extern void		USLOSS_ContextInit(USLOSS_Context *state,
+			    char *stack, int stackSize, struct USLOSS_PTE *pageTable, void (*func)(void));
 extern void		USLOSS_ContextSwitch(USLOSS_Context *old, USLOSS_Context *new);
-extern unsigned int	USLOSS_PsrGet(void);
-extern void		USLOSS_PsrSet(unsigned int psr);
-extern int		USLOSS_Clock(void);
+extern unsigned int	USLOSS_PsrGet(void) __attribute__((warn_unused_result));
+extern int		USLOSS_PsrSet(unsigned int psr) __attribute__((warn_unused_result));
 extern void		USLOSS_Syscall(void *arg);
+extern void     USLOSS_IllegalInstruction(void);
+
+// Generic USLOSS error codes.
+
+#define USLOSS_ERR_OK           0
+#define USLOSS_ERR_INVALID_PSR  1
+
+/*
+ *  These are the values for the individual interrupts
+ *  in the interrupt vector.
+ */
+#define USLOSS_CLOCK_INT    0   /* clock */
+#define USLOSS_ALARM_INT    1   /* alarm */
+#define USLOSS_DISK_INT     2   /* disk */
+#define USLOSS_TERM_INT     3   /* terminal */ 
+#define USLOSS_MMU_INT      4   /* MMU */
+#define USLOSS_SYSCALL_INT  5   /* syscall */
+#define USLOSS_ILLEGAL_INT  6   /* illegal instruction */
 
 /*
  *  This tells how many slots are in the intvec
- *  USLOSS_NUM_INTS = number of device types +  1 (for syscall interrupt)
  */
-#define USLOSS_NUM_INTS	6	/* number of interrupts */
+#define USLOSS_NUM_INTS	(USLOSS_ILLEGAL_INT + 1)	/* number of interrupts */
 
 /*
  *  This is the interrupt vector table
  */
 extern void (*USLOSS_IntVec[USLOSS_NUM_INTS])(int dev, void *arg);
-
-/* 
- *  These are the values for the individual interrupts
- *  in the interrupt vector.
- */
-#define USLOSS_CLOCK_INT	0	/* clock */
-#define USLOSS_ALARM_INT	1	/* alarm */
-#define USLOSS_DISK_INT		2	/* disk */
-#define USLOSS_TERM_INT		3	/* terminal */ 
-#define USLOSS_MMU_INT		4	/* MMU */
-#define USLOSS_SYSCALL_INT 	5	/* syscall */
 
 #define LOW_PRI_DEV	USLOSS_TERM_INT  /* terminal is lowest priority */
 
@@ -197,46 +203,56 @@ typedef struct USLOSS_DeviceRequest
  * Routines that USLOSS invokes for test setup and cleanup. Must be defined by the test code.
  */
 
-extern void setup(void);
-extern void cleanup(void);
+extern void test_setup(int argc, char **argv);
+extern void test_cleanup(int argc, char **argv);
 
 /*
  * Routines that USLOSS invokes on startup and shutdown. Must be defined by the OS.
  */
 
-extern void startup(void);
-extern void finish(void);
-
-
-
+extern void startup(int argc, char **argv);
+extern void finish(int argc, char **argv);
 
 /*
  * MMU definitions.
  */
 
- #define USLOSS_MMU_NUM_TAG	4	/* Maximum number of tags in MMU */
+#define USLOSS_MMU_MODE_TLB         1       // MMU implements a TLB 
+#define USLOSS_MMU_MODE_PAGETABLE   2       // MMU implements a page table
+
+// Page Table Entry.
+typedef struct USLOSS_PTE {
+    unsigned int    incore:1;   // 1 if page is in frame, 0 if not
+    unsigned int    read: 1;    // Page is readable
+    unsigned int    write: 1;   // Page is writeable. 
+    unsigned int    frame;      // Frame in which page is stored, if any.
+} USLOSS_PTE;
+
+
+ #define USLOSS_MMU_NUM_TAG 4   /* Maximum number of tags in MMU */
 
 /*
  * Error codes
  */
-#define USLOSS_MMU_OK		0	/* Everything hunky-dory */
-#define USLOSS_MMU_ERR_OFF	1	/* MMU not enabled */
-#define USLOSS_MMU_ERR_ON	2	/* MMU already initialized */
-#define USLOSS_MMU_ERR_PAGE	3	/* Invalid page number */
-#define USLOSS_MMU_ERR_FRAME	4	/* Invalid frame number */
-#define USLOSS_MMU_ERR_PROT	5	/* Invalid protection */
-#define USLOSS_MMU_ERR_TAG	6	/* Invalid tag */
-#define USLOSS_MMU_ERR_REMAP	7	/* Page already mapped */
-#define USLOSS_MMU_ERR_NOMAP	8	/* Page not mapped */
-#define USLOSS_MMU_ERR_ACC	9	/* Invalid access bits */
-#define USLOSS_MMU_ERR_MAPS	10	/* Too many mappings */
+#define USLOSS_MMU_OK           0   /* Everything hunky-dory */
+#define USLOSS_MMU_ERR_OFF      1   /* MMU not enabled */
+#define USLOSS_MMU_ERR_ON       2   /* MMU already initialized */
+#define USLOSS_MMU_ERR_PAGE     3   /* Invalid page number */
+#define USLOSS_MMU_ERR_FRAME    4   /* Invalid frame number */
+#define USLOSS_MMU_ERR_PROT     5   /* Invalid protection */
+#define USLOSS_MMU_ERR_TAG      6   /* Invalid tag */
+#define USLOSS_MMU_ERR_REMAP    7   /* Page already mapped */
+#define USLOSS_MMU_ERR_NOMAP    8   /* Page not mapped */
+#define USLOSS_MMU_ERR_ACC      9   /* Invalid access bits */
+#define USLOSS_MMU_ERR_MAPS     10  /* Too many mappings */
+#define USLOSS_MMU_ERR_MODE     11  /* Invalid MMU mode */
 
 /*
  * Protections
  */
 #define USLOSS_MMU_PROT_NONE	0	/* Page cannot be accessed */
 #define USLOSS_MMU_PROT_READ	1	/* Page is read-only */
-#define USLOSS_MMU_PROT_RW	3	/* Page can be both read and written */
+#define USLOSS_MMU_PROT_RW	    3	/* Page can be both read and written */
 
 /*
  * Causes
@@ -254,19 +270,26 @@ extern void finish(void);
  * Function prototypes for MMU routines. See the MMU documentation.
  */
 
-extern int 	USLOSS_MmuInit(int numMaps, int numPages, int numFrames);
-extern void	*USLOSS_MmuRegion(int *numPagesPtr);
-extern int	USLOSS_MmuDone(void);
-extern int	USLOSS_MmuMap(int tag, int page, int frame, int protection);
-extern int	USLOSS_MmuUnmap(int tag, int page);
-extern int	USLOSS_MmuGetMap(int tag, int page, int *framePtr, int *protPtr);
-extern int	USLOSS_MmuGetCause(void);
-extern int	USLOSS_MmuSetAccess(int frame, int access);
-extern int	USLOSS_MmuGetAccess(int frame, int *accessPtr);
-extern int	USLOSS_MmuSetTag(int tag);
-extern int	USLOSS_MmuGetTag(int *tagPtr);
-extern int	USLOSS_MmuPageSize(void);
-extern int	USLOSS_MmuTouch(void *addr);
+extern int 	USLOSS_MmuInit(int numMaps, int numPages, int numFrames, int mode) 
+                            __attribute__((warn_unused_result));
+extern void	*USLOSS_MmuRegion(int *numPagesPtr) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuDone(void) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuMap(int tag, int page, int frame, int protection) 
+                            __attribute__((warn_unused_result));
+extern int	USLOSS_MmuUnmap(int tag, int page) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuGetMap(int tag, int page, int *framePtr, int *protPtr) 
+                            __attribute__((warn_unused_result));
+extern int	USLOSS_MmuGetCause(void) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuSetAccess(int frame, int access) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuGetAccess(int frame, int *accessPtr) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuSetTag(int tag) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuGetTag(int *tagPtr) __attribute__((warn_unused_result));
+extern int	USLOSS_MmuPageSize(void) __attribute__((warn_unused_result));
+extern int  USLOSS_MmuTouch(void *addr) __attribute__((warn_unused_result));
+extern int  USLOSS_MmuSetPageTable(USLOSS_PTE *table) __attribute__((warn_unused_result));
+extern int  USLOSS_MmuGetPageTable(USLOSS_PTE **table) __attribute__((warn_unused_result));
+
+
 
 
 #endif	/*  _usloss_h */

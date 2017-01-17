@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
@@ -19,7 +18,13 @@
 #define NUM_SIG 100
 
 static void             *syscall_arg = NULL;
-static int              syscall_pending = 0;
+
+// Values for trap_pending
+
+#define SYSCALL_PENDING 1
+#define ILLEGAL_PENDING 2
+static int              trap_pending = 0;
+
 struct sigaction        old_actions[NUM_SIG];
 
 static USLOSS_Context           *launch_context;
@@ -64,16 +69,10 @@ dynamic_fun void stop_timer(void)
 }
 
 static void launcher(void) {
-    unsigned int psr;
     void (*func)(void);
 
     assert(launch_context != NULL);
-    psr = launch_context->initial_psr;
     func = launch_context->start;
-    current_psr = USLOSS_PSR_MAGIC | psr;
-    if (psr & USLOSS_PSR_CURRENT_INT) {
-       (void) int_on();
-    }
     launch_context = NULL;
     (*func)();
     rpt_sim_trap("forked function returned!\n");
@@ -84,7 +83,7 @@ static void launcher(void) {
  *  Routine called by client programs in kernel mode to set up the starting
  *  state of a thread
  */
-void USLOSS_ContextInit(USLOSS_Context *ctx, unsigned int psr, char *stack, int stackSize,
+void USLOSS_ContextInit(USLOSS_Context *ctx, char *stack, int stackSize, USLOSS_PTE *pageTable,
     void (*pc)(void))
 {
     int err_return;
@@ -92,20 +91,17 @@ void USLOSS_ContextInit(USLOSS_Context *ctx, unsigned int psr, char *stack, int 
 
     enabled = int_off();
     check_kernel_mode("USLOSS_ContextInit");
-    if (psr & ~USLOSS_PSR_MASK) {
-        rpt_sim_trap("USLOSS_ContextInit: invalid psr value\n");
-    }
     if (stackSize < USLOSS_MIN_STACK) {
         rpt_sim_trap("USLOSS_ContextInit: stackSize < USLOSS_MIN_STACK\n");
     }
     err_return = getcontext(&ctx->context);            
-    usloss_sys_assert(err_return != -1, "bad getcontext in USLOSS_ContextInit");
+    usloss_sys_assert(err_return != -1, "INTERNAL ERROR: getcontext failed in USLOSS_ContextInit");
     ctx->context.uc_stack.ss_sp = stack;
     ctx->context.uc_stack.ss_size = stackSize;
     ctx->context.uc_link = NULL;
+    ctx->pageTable = pageTable;
     makecontext(&ctx->context, launcher, 0);
     ctx->start = pc;
-    ctx->initial_psr = psr;
     if (enabled) {
         int_on();
     }
@@ -130,22 +126,30 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
     switch(sig)
     {
       case SIG_ALARM:   /*  Device or clock interrupt - to dispatch routine */
-        waiting = 0;    /*  or make this conditional depending on terminal? */
+        USLOSSwaiting = 0;    /*  or make this conditional depending on terminal? */
         pclock_ticks++;
         partial_ticks = 0;
-        if (syscall_pending) {
+        if (trap_pending) {
             goto done;
         }
         dispatch_int();
         break;
       case SIGUSR1:
-        usloss_assert(syscall_pending == 1, "no syscall pending?");
-        arg = syscall_arg;
-        syscall_pending = 0;
-        if (USLOSS_IntVec[USLOSS_SYSCALL_INT] == NULL) {
-            rpt_sim_trap("USLOSS_IntVec[USLOSS_SYSCALL_INT] is NULL!\n");
+        usloss_assert(trap_pending != 0, "no trap pending?");
+        if (trap_pending == SYSCALL_PENDING) {
+            arg = syscall_arg;
+            trap_pending = 0;
+            if (USLOSS_IntVec[USLOSS_SYSCALL_INT] == NULL) {
+                rpt_sim_trap("USLOSS_IntVec[USLOSS_SYSCALL_INT] is NULL!\n");
+            }
+            (*USLOSS_IntVec[USLOSS_SYSCALL_INT])(USLOSS_SYSCALL_INT, arg);
+        } else if (trap_pending == ILLEGAL_PENDING) {
+            trap_pending = 0;
+            if (USLOSS_IntVec[USLOSS_ILLEGAL_INT] == NULL) {
+                rpt_sim_trap("USLOSS_IntVec[USLOSS_ILLEGAL_INT] is NULL!\n");
+            }
+            (*USLOSS_IntVec[USLOSS_ILLEGAL_INT])(USLOSS_ILLEGAL_INT, NULL);
         }
-        (*USLOSS_IntVec[USLOSS_SYSCALL_INT])(USLOSS_SYSCALL_INT, arg);
         break;
       case SIGSEGV:
       case SIGBUS:
@@ -184,27 +188,43 @@ done:
 void USLOSS_ContextSwitch(USLOSS_Context *old_context, USLOSS_Context *new_context)
 {
     int err_return;
-    unsigned int psr;
     int enabled;
+    int status;
+    int mode;
 
     enabled = int_off();
     check_kernel_mode("USLOSS_ContextSwitch");
     check_interrupts();
-    psr = current_psr;
+    if (new_context == NULL) {
+        rpt_sim_trap("USLOSS_ContextSwitch: new_context is NULL.\n");
+    }
+
     launch_context = new_context;
+    status = USLOSS_MmuGetMode(&mode);
+    if (status != USLOSS_MMU_ERR_OFF) {
+        if (status != USLOSS_MMU_OK) {
+            rpt_sim_trap("USLOSS_ContextSwitch: unable to get MMU mode.\n");
+        }
+        if (mode == USLOSS_MMU_MODE_PAGETABLE) {
+            status = USLOSS_MmuSetPageTable(new_context->pageTable);
+            if (status != USLOSS_MMU_OK) {
+                if ((status != USLOSS_MMU_ERR_OFF) || (new_context->pageTable != NULL)) {
+                    char msg[100];
+                    snprintf(msg, sizeof(msg), "USLOSS_ContextSwitch: USLOSS_MmuSetPageTable failed: %d.\n", 
+                             status);
+                    rpt_sim_trap(msg);
+                }
+            }
+        }
+    }
     if (old_context == NULL) {
         err_return = setcontext(&new_context->context);
     } else {
         check_interrupts();
         err_return = swapcontext(&old_context->context, 
                         &new_context->context);
-        if ((psr & ~USLOSS_PSR_MASK) != USLOSS_PSR_MAGIC) {
-            usloss_assert(0, "corrupted psr");
-        }
-        current_psr = psr;
     }
-    usloss_sys_assert(err_return != -1, "context swap error in "
-                      "USLOSS_ContextSwitch)");
+    usloss_sys_assert(err_return != -1, "context swap error in USLOSS_ContextSwitch");
     if (enabled) {
         int_on();
     }
@@ -257,7 +277,7 @@ void int_on(void)
 
 /*
  *  This routine implements the USLOSS_WaitInt() instruction.  It continually sends
- *  the SIG_ALARM signal until the 'waiting' variable is set to 0 (by the
+ *  the SIG_ALARM signal until the 'USLOSSwaiting' variable is set to 0 (by the
  *  signal handler). 
  */
 void USLOSS_WaitInt(void)
@@ -265,8 +285,8 @@ void USLOSS_WaitInt(void)
     if ((current_psr & USLOSS_PSR_CURRENT_INT) == 0) {
         rpt_sim_trap("USLOSS_WaitInt called with interrupts disabled");
     }
-    waiting = 1;
-    while (waiting) {
+    USLOSSwaiting = 1;
+    while (USLOSSwaiting) {
 #ifdef VIRTUAL_TIME
         raise(SIG_ALARM);
 #else
@@ -276,7 +296,7 @@ void USLOSS_WaitInt(void)
 }
 
 /*
- * System call. The syscall_pending flag is a total hack. Without it
+ * System call. The trap_pending flag is a total hack. Without it
  * a SIG_ALARM signal might show up after the SIGUSR1 signal has been
  * posted but before the signal handler is called. The alarm signal
  * may cause a context switch, causing the wrong process to get the
@@ -290,7 +310,7 @@ void USLOSS_Syscall(void *arg)
     sigset_t cur_set;
 
     if (current_psr & USLOSS_PSR_CURRENT_MODE) {
-        USLOSS_Console("FATAL ERROR: Invoking USLOSS_Syscall from kernel mode\n");
+        USLOSS_Console("FATAL ERROR: Invoking USLOSS_Syscall from kernel mode.\n");
         abort();
     }
     /*
@@ -303,10 +323,36 @@ void USLOSS_Syscall(void *arg)
         USLOSS_Console("INTERNAL ERROR: USLOSS_Syscall: invoking raise() with SIGUSR1 blocked.\n");
         abort();
     }
-    syscall_pending = 1;
+    trap_pending = SYSCALL_PENDING;
     syscall_arg = arg;
     raise(SIGUSR1);
 }
+
+void USLOSS_IllegalInstruction(void)
+{
+    int err_return;
+    int enabled;
+    sigset_t cur_set;
+
+    if (current_psr & USLOSS_PSR_CURRENT_MODE) {
+        USLOSS_Console("FATAL ERROR: Invoking USLOSS_IllegalInstruction from kernel mode.\n");
+        abort();
+    }
+    /*
+     * Make sure SIGUSR1 is not blocked.
+     */
+    err_return = sigprocmask(SIG_BLOCK, NULL, &cur_set);
+    usloss_sys_assert(err_return != -1, "error checking signal mask");
+    enabled = sigismember(&cur_set, SIGUSR1) ? FALSE : TRUE;
+    if (enabled == FALSE) {
+        USLOSS_Console("INTERNAL ERROR: USLOSS_IllegalInstruction: invoking raise() with SIGUSR1 blocked.\n");
+        abort();
+    }
+    trap_pending = ILLEGAL_PENDING;
+    raise(SIGUSR1);
+}
+
+
 
 /* ----------------- */
 

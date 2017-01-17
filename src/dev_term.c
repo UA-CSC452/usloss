@@ -24,15 +24,39 @@ static TermInfo terms[USLOSS_TERM_UNITS];
 
 #define SET_XMIT_STATUS(status, value)\
     (status) &= ~0xc;\
-    (status) |= (((value) & 0xf) << 2);
+    (status) |= (((value) & 0x3) << 2);
 
 #define SET_RECV_STATUS(status, value)\
-    (status) &= ~0xf;\
-    (status) |= ((value) & 0xf);
+    (status) &= ~0x3;\
+    (status) |= ((value) & 0x3);
 
 #define SET_CHAR(status, ch)\
     (status) &= ~0xff00;\
     (status) |= (((ch) & 0xff) << 8);
+
+static char *status2str[] = {"ready", "busy", "error"};
+
+static void
+print_status(int status) {
+    printf("status: char: %c xmit: %s recv: %s\n", USLOSS_TERM_STAT_CHAR(status),
+           status2str[USLOSS_TERM_STAT_XMIT(status)],
+           status2str[USLOSS_TERM_STAT_RECV(status)]);
+}
+
+static void
+print_control(int control) {
+    printf("control: char: %c", (control >> 8) & 0xff);
+    if (control & 4) {
+        printf(", xmit enable");
+    }
+    if (control & 2) {
+        printf(", recv enable");
+    }
+    if (control & 1) {
+        printf(", send char");
+    }
+    printf("\n");
+}
 
 /* 
  *  Open a file or "/dev/null" if file nonexistent
@@ -119,7 +143,7 @@ dynamic_dcl int term_get_status(int unit, int *statusPtr)
 }
 
 /*
- *  Writes to a terminals control register. If a character is being 
+ *  Writes to a terminal's control register. If a character is being 
  *  sent and the device is not busy, then write the character to the file 
  *  and mark the device as busy.
  */
@@ -130,25 +154,25 @@ dynamic_dcl int term_request(int unit, void *arg)
     int req = (int) arg;
 
     if ((unit < 0) || (unit > 3)) {
-	return USLOSS_DEV_INVALID;
+	   return USLOSS_DEV_INVALID;
     }
     terms[unit].control = req;
     /*
      * Check to see if we are supposed to send a character.
      */
     if (req & 0x1) {
-	if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_READY) {
-		ch = (req >> 8) & 0xff;
-		err_return = putc(ch, terms[unit].outputPtr);
-		usloss_sys_assert(err_return != EOF, 
-			"error on putc to terminal device");
-		err_return = fflush(terms[unit].outputPtr);
-		usloss_sys_assert(err_return == 0, 
-			"error on fflush of terminal device");
-		SET_XMIT_STATUS(terms[unit].status, USLOSS_DEV_BUSY);
-	} else if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_BUSY) {
-	    return USLOSS_DEV_BUSY;
-	}
+    	if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_READY) {
+    		ch = (req >> 8) & 0xff;
+    		err_return = putc(ch, terms[unit].outputPtr);
+    		usloss_sys_assert(err_return != EOF, 
+    			"error on putc to terminal device");
+    		err_return = fflush(terms[unit].outputPtr);
+    		usloss_sys_assert(err_return == 0, 
+    			"error on fflush of terminal device");
+    		SET_XMIT_STATUS(terms[unit].status, USLOSS_DEV_BUSY);
+    	} else if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_BUSY) {
+    	    return USLOSS_DEV_BUSY;
+    	}
     }
     return USLOSS_DEV_OK;
 }
@@ -165,6 +189,10 @@ dynamic_dcl int term_action(void *arg)
 
     /*  Select the pseudoterminal to read from and get next character */ 
     unit = (unit + 1) % 4;
+    //printf("term_action %d\n", unit);
+    //print_status(terms[unit].status);
+    //print_control(terms[unit].control);
+
     in_char = nextchr(terms[unit].inputPtr);
     //terms[unit].status = 0;
 
@@ -190,16 +218,12 @@ dynamic_dcl int term_action(void *arg)
      * If the xmit side is busy, then we just sent a character. Mark
      * the xmit side as ready.
      */
-    //if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_BUSY) {
-	SET_XMIT_STATUS(terms[unit].status, USLOSS_DEV_READY);
-    //}
-    /*
-     * If the xmit side of the terminal is ready and the xmit interrupt
-     * is enabled, then generate an interrupt.
-     */
-    if ((USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_READY) &&
-	(terms[unit].control & 0x4)) {
-		result = unit;
+    if (USLOSS_TERM_STAT_XMIT(terms[unit].status) == USLOSS_DEV_BUSY) {
+	   SET_XMIT_STATUS(terms[unit].status, USLOSS_DEV_READY);
+       // If xmit interrupt is enabled then generate an interrupt. 
+	   if (terms[unit].control & 0x4) {
+	       result = unit;
+       }
     }
     return result;
 }

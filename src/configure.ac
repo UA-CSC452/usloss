@@ -23,6 +23,5 @@ AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([memset munmap])
 
-AC_CONFIG_FILES([Makefile
-                 tests/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

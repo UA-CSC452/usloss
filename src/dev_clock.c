@@ -12,14 +12,14 @@ dynamic_dcl void clock_init(void)
 }
 
 /*
- *  Returns the status of the clock device - always DEV_READY
+ *  Returns the status of the clock device which is the uptime.
  */
 dynamic_dcl int clock_get_status(int unit, int *statusPtr)
 {
     if (unit != 0) {
-	return USLOSS_DEV_INVALID;
+	   return USLOSS_DEV_INVALID;
     }
-    *statusPtr = USLOSS_DEV_READY;
+    *statusPtr = USLOSSClock();
     return USLOSS_DEV_OK;
 }
 

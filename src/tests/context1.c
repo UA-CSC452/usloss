@@ -14,37 +14,41 @@ char stack1[SIZE];
 void
 Test0(void)
 {
-    while(1) {
+    int i;
+    for (i = 0; i < 4; i++) {
         USLOSS_Console("Test0\n");
         USLOSS_ContextSwitch(&context0, &context1);
     }
+    USLOSS_Halt(0);
 }
 void
 Test1(void)
 {
-    while(1) {
+    int i;
+    for (i = 0; i < 4; i++) {
         USLOSS_Console("Test1\n");
         USLOSS_ContextSwitch(&context1, &context0);
     }
+    USLOSS_Halt(0);
 }
 
 void helper(void)
 {
-    USLOSS_ContextInit(&context0, USLOSS_PsrGet(), stack0, sizeof(stack0), Test0);
-    USLOSS_ContextInit(&context1, USLOSS_PsrGet(), stack1, sizeof(stack1), Test1);
+    USLOSS_ContextInit(&context0, stack0, sizeof(stack0), NULL, Test0);
+    USLOSS_ContextInit(&context1, stack1, sizeof(stack1), NULL, Test1);
     USLOSS_ContextSwitch(&context2, &context0);
 }
 
 void
-startup()
+startup(int argc, char **argv)
 {
-    USLOSS_Console("startup\n");
+    USLOSS_Console("Startup\n");
     helper();
 }
 void
-finish(void)
+finish(int argc, char **argv)
 {
-    USLOSS_Console("Finishing\n");
+    USLOSS_Console("Finish\n");
 }
-void setup(void) {}
-void cleanup(void) {}
+void test_setup(int argc, char **argv) {}
+void test_cleanup(int argc, char **argv) {}

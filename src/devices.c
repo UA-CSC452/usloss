@@ -122,7 +122,7 @@ dynamic_fun void dispatch_int(void)
 	nothing, otherwise call the user interrupt handler */
     if (unit_num != -1)
     {
-	waiting = 0;		/*  Even on terminal input?? */
+	USLOSSwaiting = 0;		/*  Even on terminal input?? */
 	if (USLOSS_IntVec[event_device] == NULL) {
 	    rpt_sim_trap("USLOSS_IntVec contains NULL handle for interrupt.\n");
 	}

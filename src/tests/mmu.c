@@ -5,7 +5,6 @@
 #include <string.h>
 #include <setjmp.h>
 #include "usloss.h"
-#include "mmu.h"
 
 #define NUMPAGES	4
 #define NUMFRAMES	4
@@ -42,7 +41,7 @@ int	wantCause;
 }
 
 #define LOAD(func) {						\
-    USLOSS_ContextInit(&contexts[!active], USLOSS_PsrGet(), stack, USLOSS_MIN_STACK, func);\
+    USLOSS_ContextInit(&contexts[!active], stack, USLOSS_MIN_STACK, NULL, func);\
 }
 
 char			stack[USLOSS_MIN_STACK];
@@ -66,8 +65,8 @@ CheckPage(int page, int offset)
     int	realPage;
     realPage = PageIndex(offset);
     if (realPage != page) {
-	USLOSS_Console("Fault caused by wrong page: %d != %d\n", realPage, page);
-	abort();
+	   USLOSS_Console("Fault caused by wrong page: %d != %d\n", realPage, page);
+	   abort();
     }
 }
 int
@@ -77,8 +76,8 @@ CheckCause(int cause)
 
     realCause = USLOSS_MmuGetCause();
     if ((realCause & cause) == 0) {
-	USLOSS_Console("Wrong cause: %d != %d\n", realCause, cause);
-	abort();
+	   USLOSS_Console("Wrong cause: %d != %d\n", realCause, cause);
+	   abort();
     }
     return realCause;
 }
@@ -419,7 +418,7 @@ DoTest(void (*test)())
 }
 
 void 
-startup()
+startup(int argc, char **argv)
 {
     int		i;
     int		status;
@@ -442,7 +441,7 @@ startup()
 	}
     }
 
-    status = USLOSS_MmuInit(state.maps,state.pages,state.frames);
+    status = USLOSS_MmuInit(state.maps,state.pages,state.frames, USLOSS_MMU_MODE_TLB);
     assert(status == USLOSS_MMU_OK);
     segment = USLOSS_MmuRegion(&dummy);
     assert(segment != NULL);
@@ -450,7 +449,8 @@ startup()
 
     tag = 0;
 
-    USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    status = USLOSS_PsrSet(USLOSS_PsrGet() | USLOSS_PSR_CURRENT_INT);
+    assert(status == USLOSS_ERR_OK);
 
 
     DoTest(Test1);
@@ -466,9 +466,9 @@ startup()
 }
 
 void
-finish()
+finish(int argc, char **argv)
 {
     return;
 }
-void setup(void) {}
-void cleanup(void) {}
+void test_setup(int argc, char **argv) {}
+void test_cleanup(int argc, char **argv) {}

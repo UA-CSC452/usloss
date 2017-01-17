@@ -13,12 +13,12 @@
 dynamic_def(unsigned int current_psr = USLOSS_PSR_MAGIC);
 dynamic_def(int pclock_ticks);
 dynamic_def(int partial_ticks);
-dynamic_def(volatile int waiting);
+dynamic_def(volatile int USLOSSwaiting);
 char *usloss_version = VERSION;
 
 dynamic_fun void globals_init(void)
 {
-    waiting = 0;
+    USLOSSwaiting = 0;
     current_psr |= USLOSS_PSR_CURRENT_MODE;/* Start in kernel mode, interrupts off */
     pclock_ticks = 0;
     partial_ticks = 0;
@@ -72,23 +72,29 @@ unsigned int USLOSS_PsrGet(void)
 }
 
 
-void USLOSS_PsrSet(unsigned int new)
+int USLOSS_PsrSet(unsigned int new)
 {
+    int status;
+    check_kernel_mode("USLOSS_PsrSet");
     (void) int_off();
     check_interrupts();
-    check_kernel_mode("USLOSS_PsrSet");
     psr_valid();
     if (new & ~USLOSS_PSR_MASK) {
-	rpt_sim_trap("USLOSS_PsrSet: invalid PSR value.\n");
+        status = USLOSS_ERR_INVALID_PSR;
+        goto done;
     }
     if ((new & USLOSS_PSR_CURRENT_MASK) == 0) {
-	rpt_sim_trap("USLOSS_PsrSet: invalid PSR: user mode with interrupts off.\n");
+        status = USLOSS_ERR_INVALID_PSR;
+        goto done;
     }
     current_psr = USLOSS_PSR_MAGIC | new;
     if (current_psr & USLOSS_PSR_CURRENT_INT) {
-	int_on();
+	   int_on();
     }
     check_interrupts();
+    status = USLOSS_ERR_OK;
+done:
+    return status;
 }
 
 /*
@@ -114,16 +120,10 @@ void USLOSS_Trace(char *fmt, ...)
 void USLOSS_Console(char *fmt, ...)
 {
     va_list ap;
-    int enabled;
 
-    enabled = int_off();
     va_start(ap, fmt);
-    vfprintf(stdout, fmt, ap);
-    fflush(stdout);
+    USLOSS_VConsole(fmt, ap);
     va_end(ap);
-    if (enabled) {
-	int_on();
-    }
 }
 void USLOSS_VConsole(char *fmt, va_list ap)
 {
@@ -133,28 +133,28 @@ void USLOSS_VConsole(char *fmt, va_list ap)
     vfprintf(stdout, fmt, ap);
     fflush(stdout);
     if (enabled) {
-	int_on();
+	   int_on();
     }
 }
 
 /*
  *  Returns the system clock time (# of microseconds since the kernel started)
  */
-int USLOSS_Clock(void)
+int USLOSSClock(void)
 {
     int value;
     int enabled;
 
-    enabled = int_off();
     check_kernel_mode("USLOSS_Clock");
+    enabled = int_off();
     partial_ticks += atleast(5);
     if (partial_ticks >= ALARM_TIME) {
-	pclock_ticks++;
-	partial_ticks -= ALARM_TIME;
+	   pclock_ticks++;
+	   partial_ticks -= ALARM_TIME;
     }
     value =  pclock_ticks * ALARM_TIME + partial_ticks;  /* syscalls per tick */
-     if (enabled) {
-	int_on();
+    if (enabled) {
+	   int_on();
     }
     return value;
 }
@@ -162,19 +162,31 @@ int USLOSS_Clock(void)
 /*
  *  Stops the simulator - called by the operating system
  */
-void USLOSS_Halt(int dump)
+void USLOSS_Halt(int status)
 {
     int err_return;
 
-    (void) int_off();
     check_kernel_mode("USLOSS_Halt");
-    if (dump) {
-        abort();
-    }
+    (void) int_off();
+    finish_status = status;
     err_return = setcontext(&finish_context.context);	
     /*  Should never pass here */
     usloss_sys_assert(err_return != -1, "error resuming finishing context");
     exit(0);
+}
+
+/*
+ *  Aborts the simulator - called by the operating system
+ */
+void USLOSS_Abort(char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    check_kernel_mode("USLOSS_Abort");
+    (void) int_off();
+    USLOSS_VConsole(fmt, ap);
+
+    abort();
 }
 
 /*

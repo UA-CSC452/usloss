@@ -5,7 +5,7 @@
 #include "project.h"
 #include <signal.h>
 
-dynamic_dcl volatile int waiting;
+dynamic_dcl volatile int USLOSSwaiting;
 dynamic_dcl unsigned int current_psr;
 dynamic_dcl int pclock_ticks;
 dynamic_dcl int partial_ticks;
@@ -33,6 +33,7 @@ dynamic_dcl int atleast(int num);
 dynamic_dcl void check_interrupts(void);
 dynamic_dcl void debug(char *msg, ...);
 dynamic_dcl void psr_valid(void);
+dynamic_dcl int USLOSSClock(void);
 
 #define usloss_sys_assert(EX, STR) \
         (void)((EX) || (rpt_err(__FILE__, __LINE__, STR), 0))
@@ -41,8 +42,9 @@ dynamic_dcl void psr_valid(void);
 #define usloss_usr_assert(EX, STR) \
         (void)((EX) || (rpt_sim_trap(STR), 0))
 #define check_kernel_mode(a) \
-	usloss_usr_assert(USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE,\
-	    "privileged instruction (" a ")")
+        if ((USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE) == 0) { \
+            USLOSS_IllegalInstruction(); \
+        } 
 
 #endif	/*  _globals_h */
 

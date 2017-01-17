@@ -60,6 +60,8 @@ typedef struct MMUInfo {
     int         cause;          /* Cause of the last MMU exception */
     void        *region;        /* aligned vm region */
     int         tag;            /* Current tag */
+    USLOSS_PTE  *pageTable;     /* Page table, if there is one. */
+    int         mode;           /* PAGETABLE or TLB */
 } MMUInfo;
 
 static MMUInfo *mmuPtr = NULL;
@@ -105,10 +107,11 @@ static int SetTag(int tag);
  */
 
 int
-USLOSS_MmuInit(numMaps, numPages, numFrames)
+USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
     int         numMaps;        /* # of mappings. */
     int         numPages;       /* # of pages in the vm region. */
     int         numFrames;      /* # of page frames. */
+    int         mode;           /* USLOSS_MMU_PAGETABLE or USLOSS_MMU_TLB */
 {
     int                 fd = -1;
     FILE                *stream;
@@ -134,6 +137,13 @@ USLOSS_MmuInit(numMaps, numPages, numFrames)
     }
     if ((numMaps < 1) || (numMaps > (numPages * USLOSS_MMU_NUM_TAG))) {
         return USLOSS_MMU_ERR_MAPS;
+    }
+    switch (mode) {
+        case USLOSS_MMU_MODE_PAGETABLE:
+        case USLOSS_MMU_MODE_TLB:
+            break;
+        default:
+            return USLOSS_MMU_ERR_MODE;
     }
     stream = tmpfile();
     assert(stream != NULL);
@@ -169,6 +179,7 @@ USLOSS_MmuInit(numMaps, numPages, numFrames)
     mmuPtr->region = region;
     mmuPtr->cause = 0;
     mmuPtr->tag = 0;
+    mmuPtr->mode = mode;
     /*
      * Allocate the page and frame information. Also unmap the region.
      */
@@ -193,10 +204,10 @@ USLOSS_MmuInit(numMaps, numPages, numFrames)
  *
  * USLOSS_MmuRegion --
  *
- *      Returns a pointer to the vm region
+ *      Returns a pointer to the VM region
  *
  * Results:
- *      Pointer to the vm region.
+ *      Pointer to the VM region.
  *
  * Side effects:
  *      None.
@@ -257,6 +268,71 @@ USLOSS_MmuDone()
     mmuPtr = NULL;
     return USLOSS_MMU_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Map --
+ *
+ *      Internal function that maps a page to the given frame.
+ *
+ * Results:
+ *      MMU return status.
+ *
+ * Side effects:
+ *      Memory is mapped.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+Map(tag, page, frame, protection)
+    int         tag;            /* tag associated with map. */
+    int         page;           /* Page to be mapped. */
+    int         frame;          /* Frame to map the page into. */
+    int         protection;     /* Protection for the frame. */
+{
+    void        *addr;
+    MMUPage     *pagePtr;
+
+    if ((page < 0) || (page >= mmuPtr->numPages)) {
+        return USLOSS_MMU_ERR_PAGE;
+    }
+    if ((frame < 0) || (frame >= mmuPtr->numFrames)) {
+        return USLOSS_MMU_ERR_FRAME;
+    }
+    if (mmuPtr->numMaps == mmuPtr->maxMaps) {
+        return USLOSS_MMU_ERR_MAPS;
+    }
+    if ((protection & (~(USLOSS_MMU_PROT_RW))) != 0) {
+        return USLOSS_MMU_ERR_PROT;
+    }
+    if ((tag < 0) || (tag >= USLOSS_MMU_NUM_TAG)) {
+        return USLOSS_MMU_ERR_TAG;
+    }
+    pagePtr = &mmuPtr->pages[tag][page];
+    if (pagePtr->frame != -1) {
+        return USLOSS_MMU_ERR_REMAP;
+    }
+    if (tag == mmuPtr->tag) {
+        debug("Map: mmap 0x%p -> 0x%x\n", PageAddr(page),
+           frame * mmuPageSize);
+        (void) msync(PageAddr(page), mmuPageSize, MS_SYNC);
+        (void) munmap(PageAddr(page), mmuPageSize);
+        addr = mmap(PageAddr(page), mmuPageSize, PROT_NONE, 
+                    MAP_SHARED|MAP_FIXED, mmuPtr->fd, frame * mmuPageSize);
+        assert(addr != MAP_FAILED);
+        assert(addr == PageAddr(page));
+    }
+    debug("Map: mapping page %d (0x%p) -> %d\n", page, PageAddr(page),
+        frame);
+    mmuPtr->numMaps++;
+    assert(mmuPtr->numMaps <= mmuPtr->maxMaps);
+    pagePtr->frame = frame;
+    pagePtr->realProt = PROT_NONE;
+    pagePtr->virtProt = protection;
+    return USLOSS_MMU_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -279,51 +355,70 @@ USLOSS_MmuMap(tag, page, frame, protection)
     int         frame;          /* Frame to map the page into. */
     int         protection;     /* Protection for the frame. */
 {
-    void        *addr;
-    MMUPage     *pagePtr;
+    int         status;
 
     check_kernel_mode("USLOSS_MmuMap");
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
     }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
+        return USLOSS_MMU_ERR_MODE;
+    }
+    status = Map(tag, page, frame, protection);
+    return status;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Unmap --
+ *
+ *      Internal function that unmaps a page. The page must already be mapped.
+ *
+ * Results:
+ *      MMU return status.
+ *
+ * Side effects:
+ *      Memory is unmapped.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+Unmap(tag, page)
+    int         tag;    /* tag associated with page. */
+    int         page;   /* Page to unmap. */
+{
+    MMUPage     *pagePtr;
+
     if ((page < 0) || (page >= mmuPtr->numPages)) {
         return USLOSS_MMU_ERR_PAGE;
-    }
-    if ((frame < 0) || (frame >= mmuPtr->numFrames)) {
-        return USLOSS_MMU_ERR_FRAME;
-    }
-    if (mmuPtr->numMaps == mmuPtr->maxMaps) {
-        return USLOSS_MMU_ERR_MAPS;
-    }
-    if ((protection & (~(USLOSS_MMU_PROT_RW))) != 0) {
-        return USLOSS_MMU_ERR_PROT;
     }
     if ((tag < 0) || (tag >= USLOSS_MMU_NUM_TAG)) {
         return USLOSS_MMU_ERR_TAG;
     }
     pagePtr = &mmuPtr->pages[tag][page];
-    if (pagePtr->frame != -1) {
-        return USLOSS_MMU_ERR_REMAP;
+    if (pagePtr->frame == -1) {
+        return USLOSS_MMU_ERR_NOMAP;
     }
+    debug("Unmap: unmapping page %d (0x%p)\n", page, PageAddr(page));
     if (tag == mmuPtr->tag) {
-        debug("USLOSS_MmuMap: mmap 0x%p -> 0x%x\n", PageAddr(page),
-           frame * mmuPageSize);
+        void *addr;
+        debug("Unmap: frame %d, virtProt %d, realProt %d\n", 
+            pagePtr->frame, pagePtr->virtProt, pagePtr->realProt);
         (void) msync(PageAddr(page), mmuPageSize, MS_SYNC);
         (void) munmap(PageAddr(page), mmuPageSize);
         addr = mmap(PageAddr(page), mmuPageSize, PROT_NONE, 
-                    MAP_SHARED|MAP_FIXED, mmuPtr->fd, frame * mmuPageSize);
+                    MAP_SHARED|MAP_FIXED, mmuPtr->fd, nowhere);
         assert(addr != MAP_FAILED);
-        assert(addr == PageAddr(page));
+        assert(USLOSS_MmuTouch(PageAddr(page)) == FALSE);
     }
-    debug("USLOSS_MmuMap: mapping page %d (0x%p) -> %d\n", page, PageAddr(page),
-        frame);
-    mmuPtr->numMaps++;
-    assert(mmuPtr->numMaps <= mmuPtr->maxMaps);
-    pagePtr->frame = frame;
+    mmuPtr->numMaps--;
+    pagePtr->frame = -1;
     pagePtr->realProt = PROT_NONE;
-    pagePtr->virtProt = protection;
+    pagePtr->virtProt = 0;
     return USLOSS_MMU_OK;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -344,40 +439,19 @@ USLOSS_MmuUnmap(tag, page)
     int         tag;    /* tag associated with page. */
     int         page;   /* Page to unmap. */
 {
-    MMUPage     *pagePtr;
+    int         status;
 
     check_kernel_mode("USLOSS_MmuUnmap");
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
     }
-    if ((page < 0) || (page >= mmuPtr->numPages)) {
-        return USLOSS_MMU_ERR_PAGE;
+    if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
+        return USLOSS_MMU_ERR_MODE;
     }
-    if ((tag < 0) || (tag >= USLOSS_MMU_NUM_TAG)) {
-        return USLOSS_MMU_ERR_TAG;
-    }
-    pagePtr = &mmuPtr->pages[tag][page];
-    if (pagePtr->frame == -1) {
-        return USLOSS_MMU_ERR_NOMAP;
-    }
-    debug("USLOSS_MmuUnmap: unmapping page %d (0x%p)\n", page, PageAddr(page));
-    if (tag == mmuPtr->tag) {
-        void *addr;
-        debug("USLOSS_MmuUnmap: frame %d, virtProt %d, realProt %d\n", 
-            pagePtr->frame, pagePtr->virtProt, pagePtr->realProt);
-        (void) msync(PageAddr(page), mmuPageSize, MS_SYNC);
-        (void) munmap(PageAddr(page), mmuPageSize);
-        addr = mmap(PageAddr(page), mmuPageSize, PROT_NONE, 
-                    MAP_SHARED|MAP_FIXED, mmuPtr->fd, nowhere);
-        assert(addr != MAP_FAILED);
-        assert(USLOSS_MmuTouch(PageAddr(page)) == FALSE);
-    }
-    mmuPtr->numMaps--;
-    pagePtr->frame = -1;
-    pagePtr->realProt = PROT_NONE;
-    pagePtr->virtProt = 0;
-    return USLOSS_MMU_OK;
+    status = Unmap(tag, page);
+    return status;
 }
+
 /*
  *----------------------------------------------------------------------
  *
@@ -407,6 +481,9 @@ USLOSS_MmuGetMap(tag, page, framePtr, protPtr)
 #endif
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
+    }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
+        return USLOSS_MMU_ERR_MODE;
     }
     if ((page < 0) || (page >= mmuPtr->numPages)) {
         return USLOSS_MMU_ERR_PAGE;
@@ -756,6 +833,9 @@ USLOSS_MmuSetTag(new)
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
     }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
+        return USLOSS_MMU_ERR_MODE;
+    }
     if ((new < 0) || (new >= USLOSS_MMU_NUM_TAG)) {
         return USLOSS_MMU_ERR_TAG;
     }
@@ -784,6 +864,9 @@ USLOSS_MmuGetTag(tagPtr)
     check_kernel_mode("USLOSS_MmuGetTag");
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
+    }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
+        return USLOSS_MMU_ERR_MODE;
     }
     *tagPtr = mmuPtr->tag;
     return USLOSS_MMU_OK;
@@ -919,3 +1002,133 @@ USLOSS_MmuTouch(void *addr)
     return touched;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * USLOSS_MmuSetPageTable
+ *
+ *      Sets or updates the current page table.
+ *
+ * Results:
+ *      MMU return status.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable) 
+{
+    int         numPages;
+    int         status;
+
+    check_kernel_mode("USLOSS_MmuSetPageTable");
+    if (mmuPtr == NULL) {
+        return USLOSS_MMU_ERR_OFF;
+    }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_PAGETABLE) {
+        return USLOSS_MMU_ERR_MODE;
+    }
+    numPages = mmuPtr->numPages;
+
+    mmuPtr->pageTable = pageTable;
+
+    // Remove existing mappings.
+
+    for (int i = 0; i < numPages; i++) {
+        status = Unmap(0, i);
+        switch (status) {
+            case USLOSS_MMU_OK:
+            case USLOSS_MMU_ERR_NOMAP:
+                // Everything ok.
+                break;
+            default:
+                // Something is wrong
+                goto done;
+        }
+    }
+
+    if (pageTable != NULL) {
+        // Add new mappings.
+        for (int i = 0; i < numPages; i++) {
+            if (pageTable[i].incore) {
+                int protection = USLOSS_MMU_PROT_NONE;
+                if ((pageTable[i].read == 1) && (pageTable[i].write == 0)) {
+                    protection = USLOSS_MMU_PROT_READ;
+                } else if ((pageTable[i].read == 1) && (pageTable[i].write == 1)) {
+                    protection = USLOSS_MMU_PROT_RW;
+                } else {
+                    status = USLOSS_MMU_ERR_PROT;
+                    goto done;
+                }
+                status = Map(0, i, pageTable[i].frame, protection);
+                if (status != USLOSS_MMU_OK) {
+                    goto done;
+                }
+            }
+        }
+    }
+    status = USLOSS_MMU_OK;
+done:
+    return status;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * USLOSS_MmuGetPageTable
+ *
+ *      Gets the current page table.
+ *
+ * Results:
+ *      MMU return status.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+USLOSS_MmuGetPageTable(USLOSS_PTE **pageTable) 
+{
+    check_kernel_mode("USLOSS_MmuGetPageTable");
+    if (mmuPtr == NULL) {
+        return USLOSS_MMU_ERR_OFF;
+    }
+    if (mmuPtr->mode != USLOSS_MMU_MODE_PAGETABLE) {
+        return USLOSS_MMU_ERR_MODE;
+    }
+    *pageTable = mmuPtr->pageTable;
+    return USLOSS_MMU_OK;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * USLOSS_MmuGetMode
+ *
+ *      Gets MMU mode.
+ *
+ * Results:
+ *      MMU return status.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+USLOSS_MmuGetMode(int *mode) 
+{
+    check_kernel_mode("USLOSS_MmuGetMode");
+    if (mmuPtr == NULL) {
+        return USLOSS_MMU_ERR_OFF;
+    }
+    *mode = mmuPtr->mode;
+    return USLOSS_MMU_OK;
+}
