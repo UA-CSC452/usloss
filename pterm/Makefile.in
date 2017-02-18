@@ -6,10 +6,10 @@ CFLAGS  = -DBSD_COMP -g
 TARGET = pterm
 
 ifeq ($(shell uname),Darwin)
-    # Add a few things for the Mac
-    CFLAGS += -D_XOPEN_SOURCE
-    CFLAGS += -Wno-int-to-void-pointer-cast
-    OS = macosx
+	# Add a few things for the Mac
+	CFLAGS += -D_XOPEN_SOURCE
+	CFLAGS += -Wno-int-to-void-pointer-cast
+	OS = macosx
 else
 	OS = linux
 endif
@@ -20,6 +20,9 @@ $(TARGET): $(COBJS)
 
 clean:
 	rm -f $(COBJS) $(TARGET)
+	
+distclean: clean
+	rm -rf Makefile config.h config.log config.status config.mk autom4te.cache
 
 install: $(TARGET)
 	mkdir -p $(BIN_DIR)

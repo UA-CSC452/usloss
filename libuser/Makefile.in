@@ -28,4 +28,7 @@ install:	$(TARGET)
 libuser.o:	libuser.h libuser.c
 
 clean:
-	rm -f $(COBJS) $(TARGET) 
+	rm -f $(COBJS) $(TARGET) *.a 
+
+distclean: clean
+	rm -rf Makefile config.h config.log config.status config.mk autom4te.cache

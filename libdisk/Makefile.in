@@ -27,7 +27,10 @@ $(LIBRARY) : $(LIBOBJS)
 	$(AR) -r $@ $^
 
 clean:
-	rm -f $(COBJS) $(LIBOBJS) $(TARGET) $(LIBRARY)
+	rm -f $(COBJS) $(LIBOBJS) $(TARGET) $(LIBRARY) *.a
+
+distclean: clean
+	rm -rf Makefile config.h config.log config.status config.mk autom4te.cache
 
 install: $(TARGET) $(LIBRARY)
 	mkdir -p $(BIN_DIR) $(LIB_DIR)

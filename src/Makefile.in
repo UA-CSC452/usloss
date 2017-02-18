@@ -59,7 +59,10 @@ $(TESTS):   %: $(TARGET) %.o Makefile
 	- $(CC) $(LDFLAGS) -o $@ $@.o $(LIBFLAGS)
 
 clean:
-	rm -f $(COBJS) $(TOBJS) $(TESTS) usloss libusloss*.a core*	
+	rm -f $(COBJS) $(TOBJS) $(TESTS) usloss *.a core* term*.out disk[01]
+
+distclean: clean
+	rm -rf Makefile config.h config.log config.status config.mk autom4te.cache
 
 
 $(COBJS): usloss.h Makefile
