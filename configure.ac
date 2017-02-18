@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
-AC_CONFIG_SRCDIR([dev_alarm.c])
+AC_CONFIG_SRCDIR([src/dev_alarm.c])
 AC_CONFIG_HEADERS([config.h])
 
 AC_PREFIX_DEFAULT(~)
@@ -25,5 +25,5 @@ AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_CHECK_FUNCS([memset munmap])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([src/Makefile libuser/Makefile pterm/Makefile Makefile libdisk/Makefile config.mk])
 AC_OUTPUT

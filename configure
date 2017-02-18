@@ -585,7 +585,7 @@ PACKAGE_STRING='FULL-PACKAGE-NAME VERSION'
 PACKAGE_BUGREPORT='BUG-REPORT-ADDRESS'
 PACKAGE_URL=''
 
-ac_unique_file="dev_alarm.c"
+ac_unique_file="src/dev_alarm.c"
 ac_default_prefix=~
 # Factoring default headers for most tests.
 ac_includes_default="\
@@ -3722,7 +3722,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile"
+ac_config_files="$ac_config_files src/Makefile libuser/Makefile pterm/Makefile Makefile libdisk/Makefile config.mk"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4415,7 +4415,12 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "libuser/Makefile") CONFIG_FILES="$CONFIG_FILES libuser/Makefile" ;;
+    "pterm/Makefile") CONFIG_FILES="$CONFIG_FILES pterm/Makefile" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "libdisk/Makefile") CONFIG_FILES="$CONFIG_FILES libdisk/Makefile" ;;
+    "config.mk") CONFIG_FILES="$CONFIG_FILES config.mk" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

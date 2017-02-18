@@ -1,0 +1,35 @@
+include ../version.mk
+include ../config.mk
+
+COBJS = makedisk.o
+CFLAGS += -I../src
+TARGET = makedisk
+LIBRARY = libudisk$(VERSION).a
+LIBOBJS = disk.o
+LIBS = -ldisk
+
+
+ifeq ($(shell uname),Darwin)
+	# Add a few things for the Mac
+	CFLAGS += -D_XOPEN_SOURCE
+	CFLAGS += -Wno-int-to-void-pointer-cast
+	OS = macosx
+else
+	OS = linux
+endif
+
+all: $(TARGET) $(LIBRARY)
+
+$(TARGET): $(COBJS) $(LIBRARY)
+	$(CC) $(CFLAGS) -o $@ $^
+
+$(LIBRARY) : $(LIBOBJS)
+	$(AR) -r $@ $^
+
+clean:
+	rm -f $(COBJS) $(LIBOBJS) $(TARGET) $(LIBRARY)
+
+install: $(TARGET) $(LIBRARY)
+	mkdir -p $(BIN_DIR) $(LIB_DIR)
+	$(INSTALL_PROGRAM) $(TARGET) $(BIN_DIR)
+	$(INSTALL_DATA) $(LIBRARY) $(LIB_DIR)

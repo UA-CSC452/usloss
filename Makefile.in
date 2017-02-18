@@ -1,0 +1,30 @@
+include version.mk
+
+SUBDIRS= src libuser libdisk pterm
+TARBALL=usloss-$(VERSION).tgz
+
+.PHONY: $(SUBDIRS) all tar clean install
+
+ifeq ($(MAKECMDGOALS), tar)
+	SUBGOALS = clean
+else
+    SUBGOALS = $(MAKECMDGOALS)
+endif
+
+all: $(SUBDIRS)
+
+$(SUBDIRS):
+	$(MAKE) -C $@ $(SUBGOALS)
+
+
+tar: $(TARBALL)
+
+$(TARBALL): clean
+	rm -f $(TARBALL)
+	(cd ..; tar cvzf /tmp/$(TARBALL) --exclude=CVS --exclude="Mx.*" --exclude="*usloss*.tgz" --exclude=docs --exclude=tests --exclude=test --exclude=*.save --exclude=build --exclude=todo --exclude=.git usloss)
+	cp /tmp/$(TARBALL) .
+
+clean: $(SUBDIRS)
+
+install: $(SUBDIRS)
+
