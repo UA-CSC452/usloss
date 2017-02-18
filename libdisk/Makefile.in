@@ -4,7 +4,7 @@ include ../config.mk
 COBJS = makedisk.o
 CFLAGS += -I../src
 TARGET = makedisk
-LIBRARY = libudisk$(VERSION).a
+LIBRARY = libdisk$(VERSION).a
 LIBOBJS = disk.o
 LIBS = -ldisk
 
