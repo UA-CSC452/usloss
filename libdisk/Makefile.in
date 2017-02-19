@@ -2,7 +2,7 @@ include ../version.mk
 include ../config.mk
 
 COBJS = makedisk.o
-CFLAGS += -I../src
+CFLAGS += -I../src -std=gnu99
 TARGET = makedisk
 LIBRARY = libdisk$(VERSION).a
 LIBOBJS = disk.o
