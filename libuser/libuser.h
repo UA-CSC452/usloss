@@ -15,7 +15,7 @@ extern int Sys_Sleep(int seconds);
 extern int Sys_DiskWrite(void *dbuff, int track, int first,int sectors,int unit, int *status);
 extern int Sys_DiskRead(void *dbuff, int track, int first, int sectors,int unit, int *status);
 extern int Sys_DiskSize(int unit, int *sector, int *track, int *disk);
-extern void Sys_GetTimeofDay(int *tod);                           
+extern void Sys_GetTimeOfDay(int *tod);                           
 extern void Sys_CPUTime(int *cpu);                      
 extern void Sys_GetPID(int *pid);         
 extern void Sys_DumpProcesses(void);                

@@ -270,7 +270,7 @@ int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
 } /* end of DiskSize */
 
 /*
- *  Routine:  Sys_GetTimeofDay
+ *  Routine:  Sys_GetTimeOfDay
  *
  *  Description: This is the call entry point for getting the time of day.
  *
@@ -278,7 +278,7 @@ int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
  *                (output value: the time of day)
  *
  */
-void Sys_GetTimeofDay(int *tod)                           
+void Sys_GetTimeOfDay(int *tod)                           
 {
     USLOSS_Sysargs sa;
     
@@ -287,7 +287,7 @@ void Sys_GetTimeofDay(int *tod)
     USLOSS_Syscall((void *) &sa);
     *tod = (int) sa.arg1;
     return;
-} /* end of GetTimeofDay */
+} /* end of GetTimeOfDay */
 
 /*
  *  Routine:  Sys_CPUTime
