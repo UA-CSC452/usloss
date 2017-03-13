@@ -129,7 +129,6 @@ int Sys_Wait(int *pid, int *status)
     *pid = (int) sa.arg1;
     *status = (int) sa.arg2;
     return (int) sa.arg4;
-    
 } 
 
 
@@ -357,18 +356,20 @@ void Sys_DumpProcesses(void)
  *  Description: Create a semaphore.
  *		
  *
- *  Arguments:    int value -- initial semaphore value
- *		  int *semaphore -- semaphore handle
+ *  Arguments:    char *name -- semaphore name
+ *                int value -- initial semaphore value
+ *		          int *semaphore -- semaphore handle
  *                (output value: completion status)
  *
  */
-int Sys_SemCreate(int value, int *semaphore)
+int Sys_SemCreate(char *name, int value, int *semaphore)
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
     sa.number = SYS_SEMCREATE;
     sa.arg1 = (void *) value;
+    sa.arg2 = (void *) name;
     USLOSS_Syscall((void *) &sa);
     *semaphore = (int) sa.arg1;
     return (int) sa.arg4;

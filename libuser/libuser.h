@@ -19,7 +19,7 @@ extern void Sys_GetTimeOfDay(int *tod);
 extern void Sys_CPUTime(int *cpu);                      
 extern void Sys_GetPID(int *pid);         
 extern void Sys_DumpProcesses(void);                
-extern int Sys_SemCreate(int value, int *semaphore);
+extern int Sys_SemCreate(char *name, int value, int *semaphore);
 extern int Sys_SemP(int semaphore);
 extern int Sys_SemV(int semaphore);
 extern int Sys_SemFree(int semaphore);
