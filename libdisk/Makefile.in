@@ -7,6 +7,7 @@ TARGET = makedisk
 LIBRARY = libdisk$(VERSION).a
 LIBOBJS = disk.o
 LIBS = -ldisk
+HDRS = libdisk.h
 
 
 ifeq ($(shell uname),Darwin)
@@ -35,4 +36,5 @@ distclean: clean
 install: $(TARGET) $(LIBRARY)
 	mkdir -p $(BIN_DIR) $(LIB_DIR)
 	$(INSTALL_PROGRAM) $(TARGET) $(BIN_DIR)
+	$(INSTALL_DATA) $(HDRS) $(INC_DIR)
 	$(INSTALL_DATA) $(LIBRARY) $(LIB_DIR)
