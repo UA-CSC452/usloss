@@ -225,7 +225,7 @@ typedef struct USLOSS_PTE {
     unsigned int    incore:1;   // 1 if page is in frame, 0 if not
     unsigned int    read: 1;    // Page is readable
     unsigned int    write: 1;   // Page is writeable. 
-    unsigned int    frame;      // Frame in which page is stored, if any.
+    unsigned int    frame: 29;  // Frame in which page is stored, if any.
 } USLOSS_PTE;
 
 
