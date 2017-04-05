@@ -175,6 +175,7 @@ Test1(void)
     int		dummy;
 
     //USLOSS_Console("Test 1\n");
+    assert(sizeof(USLOSS_PTE) == 4);
     page = 0;
     frame = page;
     AddPTE(page, frame, USLOSS_MMU_PROT_RW);

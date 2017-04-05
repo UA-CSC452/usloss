@@ -1067,6 +1067,10 @@ USLOSS_MmuSetPageTable(USLOSS_PTE *pageTable)
                     goto done;
                 }
                 status = Map(0, i, pageTable[i].frame, protection);
+                if (status == USLOSS_MMU_ERR_FRAME) {
+                    USLOSS_Console("USLOSS_MmuSetPageTable: Page %d has invalid frame %u\n", i, 
+                                   pageTable[i].frame);
+                }
                 if (status != USLOSS_MMU_OK) {
                     goto done;
                 }
