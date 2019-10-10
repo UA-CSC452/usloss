@@ -79,10 +79,12 @@ int USLOSS_PsrSet(unsigned int new)
     (void) int_off();
     check_interrupts();
     psr_valid();
+    // disallow setting upper bits
     if (new & ~USLOSS_PSR_MASK) {
         status = USLOSS_ERR_INVALID_PSR;
         goto done;
     }
+    // disallow running in user mode w/ interrupts disabled
     if ((new & USLOSS_PSR_CURRENT_MASK) == 0) {
         status = USLOSS_ERR_INVALID_PSR;
         goto done;
