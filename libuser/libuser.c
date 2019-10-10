@@ -10,11 +10,11 @@
 #include <usloss.h>
 #include <usyscall.h>
 
-#define CHECKMODE {						\
-	if (USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE) { 				\
-	    USLOSS_Console("Trying to invoke syscall from kernel\n");	\
-	    USLOSS_Halt(1);						\
-	}							\
+#define CHECKMODE {                     \
+    if (USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE) {                \
+        USLOSS_Console("Cannot invoke syscall from kernel mode!!\n");   \
+        USLOSS_Halt(1);                     \
+    }                           \
 }
 /*
  *  Routine:  Sys_TermRead
@@ -78,19 +78,23 @@ int Sys_TermWrite(char *buff, int bsize, int unit_id, int *nwrite)
  *  Description: This is the call entry to fork a new user process.
  *
  *  Arguments:    
- *		  char *name    -- process's name
- *		  PFV func      -- pointer to the function to fork
- *		  void *arg	-- argument to function
+ *        char *name    -- process's name
+ *        PFV func      -- pointer to the function to fork
+ *        void *arg -- argument to function
  *                int stacksize -- amount of stack to be allocated
  *                int priority  -- priority of forked process
  *                int  *pid      -- pointer to output value
  *                (output value: process id of the forked process)
  *
- *  Return Value: 0 means success, -1 means error occurs
+ *  Return Value: 
+ *      P1_INVALID_PRIORITY:    invalid priority
+ *      P1_INVALID_STACK:       stack is too small (see usloss.h)
+ *      P1_TOO_MANY_PROCESSES:  no more processes
+ *      P1_SUCCESS:             success 
  *
  */
 int Sys_Spawn(char *name, int (*func)(void *), void *arg, int stack_size, int priority, 
-	int *pid)   
+    int *pid)   
 {
     USLOSS_Sysargs sa;
     
@@ -116,10 +120,12 @@ int Sys_Spawn(char *name, int (*func)(void *), void *arg, int stack_size, int pr
  *                int *status -- pointer to output value 2
  *                (output value 2: status of the completing child)
  *
- *  Return Value: 0 means success, -1 means error occurs
+ *  Return Value:
+ *      P1_NO_CHILDREN:   the process has no children
+ *      P1_SUCCESS:       success
  *
  */
-int Sys_Wait(int *pid, int *status)	
+int Sys_Wait(int *pid, int *status) 
 {
     USLOSS_Sysargs sa;
     
@@ -162,7 +168,9 @@ void Sys_Terminate(int status)
  *
  *  Arguments:    int seconds -- number of seconds to sleep
  *
- *  Return Value: 0 means success, -1 means error occurs
+ *  Return Value: 
+ *      P2_INVALID_SECONDS: invalid seconds
+ *      P1_SUCCESS:         success
  *
  */
 int Sys_Sleep(int seconds)                                 
@@ -174,7 +182,7 @@ int Sys_Sleep(int seconds)
     sa.arg1 = (void *) seconds;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
-} /* end of Delay */
+} 
 
 /*
  *  Routine:  Sys_DiskWrite
@@ -184,15 +192,19 @@ int Sys_Sleep(int seconds)
  *  Arguments:    void* dbuff  -- pointer to the output buffer
  *                int   track  -- first track to write
  *                int   first -- first sector to write
- *		  int	sectors -- number of sectors to write
- *		  int   unit   -- unit number of the disk
- *                int   *status    -- pointer to output value
- *                (output value: completion status)
+ *        int   sectors -- number of sectors to write
+ *        int   unit   -- unit number of the disk
  *
- *  Return Value: 0 means success, -1 means error occurs
+ *  Return Value: 
+ *      P1_INVALID_UNIT:        invalid unit
+ *      P2_INVALID_TRACK:       invalid track
+ *      P2_INVALID_FIRST:       invalid first sector
+ *      P2_INVALID_SECTORS:     invalid number of sectors
+ *      P2_NULL_ADDRESS:        buffer is NULL
+ *      P1_SUCCESS:             success
  *
  */
-int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit, int *status)
+int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit)
 {
     USLOSS_Sysargs sa;
 
@@ -204,7 +216,6 @@ int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit, int 
     sa.arg4 = (void *) first;
     sa.arg5 = (void *) unit;
     USLOSS_Syscall((void *) &sa);
-    *status = (int) sa.arg1;
     return (int) sa.arg4;
 } /* end of DiskWrite */
 
@@ -216,15 +227,19 @@ int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit, int 
  *  Arguments:    void* dbuff  -- pointer to the input buffer
  *                int   track  -- first track to read 
  *                int   first -- first sector to read
- *		  int	sectors -- number of sectors to read
- *		  int   unit   -- unit number of the disk
- *                int   *status    -- pointer to output value
- *                (output value: completion status)
+ *        int   sectors -- number of sectors to read
+ *        int   unit   -- unit number of the disk
  *
- *  Return Value: 0 means success, -1 means error occurs
+ *  Return Value:
+*      P1_INVALID_UNIT:        invalid unit
+ *      P2_INVALID_TRACK:       invalid track
+ *      P2_INVALID_FIRST:       invalid first sector
+ *      P2_INVALID_SECTORS:     invalid number of sectors
+ *      P2_NULL_ADDRESS:        buffer is NULL
+ *      P1_SUCCESS:             success
  *
  */
-int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit, int *status)
+int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit)
 {
     USLOSS_Sysargs sa;
     
@@ -236,7 +251,6 @@ int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit, int *
     sa.arg4 = (void *) first;
     sa.arg5 = (void *) unit;
     USLOSS_Syscall((void *) &sa);
-    *status = (int) sa.arg1;
     return (int) sa.arg4;
 } /* end of DiskRead */
 
@@ -247,25 +261,28 @@ int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit, int *
  *
  *  Arguments:    int   unit  -- the unit number of the disk 
  *                int   *sector -- bytes in a sector
- *		  int	*track -- number of sectors in a track
+ *        int   *track -- number of sectors in a track
  *                int   *disk  -- number of tracks in the disk
  *                (output value: completion status)
  *
- *  Return Value: 0 means success, -1 means invalid parameter
+ *  Return Value: 
+ *      P1_INVALID_UNIT:      invalid unit
+ *      P2_NULL_ADDRESS:      one of the arguments is NULL
+ *      P1_SUCCESS:           success
  *
  */
 int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
 {
-	USLOSS_Sysargs sa;
+    USLOSS_Sysargs sa;
 
-	CHECKMODE;
-	sa.number = SYS_DISKSIZE;
-	sa.arg1 = (void *) unit;
-	USLOSS_Syscall((void *) &sa);
-	*sector = (int) sa.arg1;
-	*track = (int) sa.arg2;
-	*disk = (int) sa.arg3;
-	return (int) sa.arg4;
+    CHECKMODE;
+    sa.number = SYS_DISKSIZE;
+    sa.arg1 = (void *) unit;
+    USLOSS_Syscall((void *) &sa);
+    *sector = (int) sa.arg1;
+    *track = (int) sa.arg2;
+    *disk = (int) sa.arg3;
+    return (int) sa.arg4;
 } /* end of DiskSize */
 
 /*
@@ -289,31 +306,35 @@ void Sys_GetTimeOfDay(int *tod)
 } /* end of GetTimeOfDay */
 
 /*
- *  Routine:  Sys_CPUTime
+ *  Routine:  Sys_GetProcInfo
  *
- *  Description: This is the call entry point for the process' CPU time.
- *		
+ *  Description: This is the call entry point for the process's info.
+ *      
  *
- *  Arguments:    int *cpu  -- pointer to output value
- *                (output value: the CPU time of the process)
+ *  Arguments:    int *info  -- pointer to P1_ProcInfo
+ *
+ *  Return Value: 
+ *      P1_INVALID_PID:     invalid pid
+ *      P1_SUCCESS:         success
  *
  */
-void Sys_CPUTime(int *cpu)                           
+int Sys_GetProcInfo(int pid, P1_ProcInfo *info)                           
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_CPUTIME;
+    sa.number = SYS_GETPROCINFO;
+    sa.arg1 = (void *) pid;
+    sa.arg2 = (void *) info;
     USLOSS_Syscall((void *) &sa);
-    *cpu = (int) sa.arg1;
-    return;
-} /* end of CPUTime */
+    return (int) sa.arg4;
+} 
 
 /*
  *  Routine:  Sys_GetPID
  *
  *  Description: This is the call entry point for the process' PID.
- *		
+ *      
  *
  *  Arguments:    int *pid  -- pointer to output value
  *                (output value: the PID)
@@ -332,34 +353,48 @@ void Sys_GetPID(int *pid)
 
 
 /*
- *  Routine:  Sys_DumpProcesses
+ *  Routine:  Sys_SemName
  *
- *  Description: This is the call entry point for printing the processes.
+ *  Description: This is the call entry point for getting a semaphore name.
  *      
  *
  *  Arguments:    None
  *
+ *  Return Value:
+ *      P1_INVALID_SID:      the semaphore is invalid
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
  */
-void Sys_DumpProcesses(void)                           
+int Sys_SemName(int sid, char *name)                           
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_DUMPPROCESSES;
+    sa.number = SYS_SEMNAME;
+    sa.arg1 = (void *) sid;
+    sa.arg2 = (void *) name;
     USLOSS_Syscall((void *) &sa);
-    return;
+    return (int) sa.arg4;
 } /* end of DumpProcesses */
 
 /*
  *  Routine:  Sys_SemCreate
  *
  *  Description: Create a semaphore.
- *		
+ *      
  *
  *  Arguments:    char *name -- semaphore name
- *                int value -- initial semaphore value
- *		          int *semaphore -- semaphore handle
+ *                unsigned int value -- initial semaphore value
+ *                int *semaphore -- semaphore handle
  *                (output value: completion status)
+ *
+ *  Return Value:
+ *      P1_DUPLICATE_NAME:      name already in use
+ *      P1_NAME_IS_NULL:        name is NULL
+ *      P1_NAME_TOO_LONG:       name is longer than P1_MAXNAME
+ *      P1_TOO_MANY_SEMS:       no more semaphores
+ *      P1_SUCCESS:             success
  *
  */
 int Sys_SemCreate(char *name, int value, int *semaphore)
@@ -380,10 +415,14 @@ int Sys_SemCreate(char *name, int value, int *semaphore)
  *  Routine:  Sys_SemP
  *
  *  Description: "P" a semaphore.
- *		
+ *      
  *
  *  Arguments:    int semaphore -- semaphore handle
  *                (output value: completion status)
+ *  
+ *  Return Value:
+ *      P1_INVALID_SID:        the semaphore is invalid
+ *      P1_SUCCESS:            success
  *
  */
 int Sys_SemP(int semaphore)
@@ -401,11 +440,14 @@ int Sys_SemP(int semaphore)
  *  Routine:  Sys_SemV
  *
  *  Description: "V" a semaphore.
- *		
+ *      
  *
  *  Arguments:    int semaphore -- semaphore handle
  *                (output value: completion status)
  *
+ *  Return Value:
+ *      P1_INVALID_SID:        the semaphore is invalid
+ *      P1_SUCCESS:            success
  */
 int Sys_SemV(int semaphore)
 {
@@ -422,11 +464,15 @@ int Sys_SemV(int semaphore)
  *  Routine:  Sys_SemFree
  *
  *  Description: Free a semaphore.
- *		
+ *      
  *
  *  Arguments:    int semaphore -- semaphore handle
  *                (output value: completion status)
  *
+ *  Return Value:
+ *      P1_BLOCKED_PROCESSES:  processes are blocked on the semaphore
+ *      P1_INVALID_SID:        the semaphore is invalid
+ *      P1_SUCCESS:            success
  */
 int Sys_SemFree(int semaphore)
 {
@@ -439,19 +485,17 @@ int Sys_SemFree(int semaphore)
     return (int) sa.arg4;
 } /* end of SemFree */
 
-#ifdef PHASE_3
-
 /*
  *  Routine:  Sys_VmInit
  *
  *  Description: Initializes the VM system.
- *		
+ *      
  *
  *  Arguments:   int mappings -- number of mappings the MMU can hold
  *               int pages -- number of pages in VM region
- *		 int frames -- number of frames of physical memory
- *	         int pagers -- number of pager daemons to create
- *		 
+ *       int frames -- number of frames of physical memory
+ *           int pagers -- number of pager daemons to create
+ *       
  *  Return Value: -1 for illegal values, -2 if the region has already been initialized, 
  *                0 otherwise
  */
@@ -459,7 +503,7 @@ int Sys_SemFree(int semaphore)
 int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
 {
     USLOSS_Sysargs sa;
-    int		   rc;
+    int        rc;
 
     CHECKMODE;
     sa.number = SYS_VMINIT;
@@ -470,7 +514,7 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
     USLOSS_Syscall((void *) &sa);
     rc = (int) sa.arg4;
     if (rc == 0) {
-	*region = sa.arg1;
+    *region = sa.arg1;
     }
     return rc;
 }
@@ -479,10 +523,10 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
  *  Routine:  Sys_VmDestroy
  *
  *  Description: Stops the VM system.
- *		
+ *      
  *
  *  Arguments:   None
- *		 
+ *       
  *  Return Value: None
  */
 void Sys_VmDestroy(void)
@@ -501,12 +545,12 @@ void Sys_VmDestroy(void)
  *  Routine:  Sys_Protect
  *
  *  Description: Protect a page in the VM region (used for Phase 3
- *		 extra credit).
- *		
+ *       extra credit).
+ *      
  *
  *  Arguments:   int page -- page to protect 
  *               int protection -- protection flags (see mmu.h)
- *		 
+ *       
  *  Return Value: -1 if an error occurred, 0 otherwise
  */
 
@@ -526,14 +570,14 @@ int Sys_Protect(int page, int protection)
  *  Routine:  Sys_Share
  *
  *  Description: Share a page in the VM region (used for Phase 3
- *		 extra credit). Page "source" in process "pid"
- *		 is shared as page "target" in the calling process.
- *		 The current contents of page "target" are lost.
- *		
+ *       extra credit). Page "source" in process "pid"
+ *       is shared as page "target" in the calling process.
+ *       The current contents of page "target" are lost.
+ *      
  *
  *  Arguments:   int pid -- process with which to share
- *		 int source -- page in process "pid" to share
- *		 int target -- page in current process to share
+ *       int source -- page in process "pid" to share
+ *       int target -- page in current process to share
  *
  *  Return Value: -1 if an error occurred, 0 otherwise
  */
@@ -555,15 +599,15 @@ int Sys_Share(int pid, int source, int target)
  *  Routine:  Sys_COW
  *
  *  Description: Copy-on-write a page in the VM region (used for Phase 3
- *		 extra credit). Page "source" in process "pid"
- *		 is shared copy-on-write as page "target" in 
- *		 the calling process.
- *		 The current contents of page "target" are lost.
- *		
+ *       extra credit). Page "source" in process "pid"
+ *       is shared copy-on-write as page "target" in 
+ *       the calling process.
+ *       The current contents of page "target" are lost.
+ *      
  *
  *  Arguments:   int pid -- process with which to share COW
- *		 int source -- page in process "pid" to share COW
- *		 int target -- page in current process to share COW
+ *       int source -- page in process "pid" to share COW
+ *       int target -- page in current process to share COW
  *
  *  Return Value: -1 if an error occurred, 0 otherwise
  */
@@ -585,10 +629,10 @@ int Sys_COW(int pid, int source, int target)
  *  Routine:  Sys_HeapAlloc
  *
  *  Description: This is the call entry point allocate from a heap.
- *		
+ *      
  *
  *  Arguments:    int bytes -- number of bytes to allocate
- *		  void **ptr  -- pointer to allocated memory
+ *        void **ptr  -- pointer to allocated memory
  *                (output value: completion status)
  *
  */
@@ -608,7 +652,7 @@ int Sys_HeapAlloc(int bytes, void **ptr)
  *  Routine:  Sys_HeapFree
  *
  *  Description: This is the call entry point free a block of memory.
- *		
+ *      
  *
  *  Arguments:    void *ptr -- block to free
  *
@@ -623,8 +667,6 @@ int Sys_HeapFree(void *ptr)
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of HeapFree */
-
-#endif 
 
 /*
  *  Routine:  Sys_MboxCreate
@@ -681,14 +723,14 @@ int Sys_MboxRelease(int mbox)
  *
  *  Arguments:    int mbox -- id of the mailbox to send to
  *                void* msg  -- message to send
- *		  int *size -- size of message 
+ *        int *size -- size of message 
  *
  *  Return Value: 0 means success, -1 means error occurs
  *
  */
 int Sys_MboxSend(int mbox, void *msg, int *size)                     
 {
-    USLOSS_Sysargs 	sa;
+    USLOSS_Sysargs  sa;
 
     CHECKMODE;
     sa.number = SYS_MBOXSEND;
@@ -707,14 +749,14 @@ int Sys_MboxSend(int mbox, void *msg, int *size)
  *
  *  Arguments:    int mbox -- id of the mailbox to receive from
  *                void* msg  -- location to receive message
- *		  int *size -- size of message 
+ *        int *size -- size of message 
  *
  *  Return Value: -1 if an error occurred, otherwise the size of the received message 
  *
  */
 int Sys_MboxReceive(int mbox, void *msg, int *size)
 {
-    USLOSS_Sysargs 	sa;
+    USLOSS_Sysargs  sa;
 
     CHECKMODE;
     sa.number = SYS_MBOXRECEIVE;
@@ -733,7 +775,7 @@ int Sys_MboxReceive(int mbox, void *msg, int *size)
  *
  *  Arguments:    int mbox -- id of the mailbox to send to
  *                void* msg  -- message to send
- *		  int *size -- size of message 
+ *        int *size -- size of message 
  *
  *  Return Value: 0 means success, -1 means error occurs, 1 means mailbox is full
  *
@@ -759,14 +801,14 @@ int Sys_MboxCondSend(int mbox, void *msg, int *size)
  *
  *  Arguments:    int mbox -- id of the mailbox to receive from
  *                void* msg  -- message to send
- *		  int *size -- size of message 
+ *        int *size -- size of message 
  *
  *  Return Value: -1 if an error occurred, otherwise the size of the received message 
  *
  */
 int Sys_MboxCondReceive(int mbox, void *msg, int *size)
 {
-    USLOSS_Sysargs 	sa;
+    USLOSS_Sysargs  sa;
 
     CHECKMODE;
     sa.number = SYS_MBOXCONDRECEIVE;
