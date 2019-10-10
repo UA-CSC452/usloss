@@ -75,7 +75,7 @@ static void launcher(void) {
     func = launch_context->start;
     launch_context = NULL;
     (*func)();
-    rpt_sim_trap("forked function returned!\n");
+    rpt_sim_trap("context's initial function returned!\n");
 }
 
 
