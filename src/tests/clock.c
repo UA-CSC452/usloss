@@ -7,7 +7,14 @@ int ticks = 0;
 
 void 
 clock_handler(int type, void *arg) {
-    USLOSS_Console("Tick %d\n", ticks);
+    static int last = 0;
+    int now;
+    int status = USLOSS_DeviceInput(USLOSS_CLOCK_DEV, 0, &now);
+    if (status != USLOSS_DEV_OK) {
+        USLOSS_Halt(status);
+    }
+    USLOSS_Console("Tick %d: %dus\n", ticks, now - last);
+    last = now;
     ticks++;
 }
 
@@ -37,7 +44,7 @@ startup(int argc, char **argv)
     assert(stop - start > 0);
     average = (stop - start) / 100;
     assert((average > 18000) && (average < 21000));
-    USLOSS_Console("Start = %d, stop = %d, elapsed = %d, average = %d\n", start, stop, stop - start, (stop - start) / 100);
+    USLOSS_Console("Start = %dus, stop = %dus, elapsed = %dus, average = %dus\n", start, stop, stop - start, (stop - start) / 100);
     USLOSS_Halt(0);
 }
 
