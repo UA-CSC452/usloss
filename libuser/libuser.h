@@ -36,7 +36,7 @@ extern int Sys_SemV(int semaphore) CHECKRETURN;
 extern int Sys_SemFree(int semaphore) CHECKRETURN;
 
 extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region) CHECKRETURN;
-extern void Sys_VmDestroy(void);
+extern void Sys_VmShutdown(void);
 /*
  * Phase 3 extra credit.
  */

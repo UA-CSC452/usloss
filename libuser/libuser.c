@@ -514,13 +514,13 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
     USLOSS_Syscall((void *) &sa);
     rc = (int) sa.arg4;
     if (rc == 0) {
-    *region = sa.arg1;
+        *region = sa.arg1;
     }
     return rc;
 }
 
 /*
- *  Routine:  Sys_VmDestroy
+ *  Routine:  Sys_VmShutdown
  *
  *  Description: Stops the VM system.
  *      
@@ -529,12 +529,12 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
  *       
  *  Return Value: None
  */
-void Sys_VmDestroy(void)
+void Sys_VmShutdown(void)
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_VMDESTROY;
+    sa.number = SYS_VMSHUTDOWN;
     USLOSS_Syscall((void *) &sa);
     return;
 }

@@ -31,7 +31,7 @@
 #define SYS_SEMNAME         23
 
 #define SYS_VMINIT          24
-#define SYS_VMDESTROY       25
+#define SYS_VMSHUTDOWN      25
 #define SYS_HEAPALLOC       26
 #define SYS_HEAPFREE        27
 #define SYS_PROTECT         28
