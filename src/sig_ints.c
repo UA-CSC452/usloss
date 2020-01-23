@@ -86,6 +86,7 @@ static void launcher(void) {
 void USLOSS_ContextInit(USLOSS_Context *ctx, char *stack, int stackSize, USLOSS_PTE *pageTable,
     void (*pc)(void))
 {
+    verbose_log(CTX_INIT_VERBOSITY, "Initializing context with stack size %d\n", stackSize);
     int err_return;
     int enabled;
 
@@ -187,6 +188,7 @@ done:
  */
 void USLOSS_ContextSwitch(USLOSS_Context *old_context, USLOSS_Context *new_context)
 {
+    verbose_log(CTX_SWITCH_VERBOSITY, "Switching Context\n");
     int err_return;
     int enabled;
     int status;

@@ -105,17 +105,23 @@ done:
 void USLOSS_Trace(char *fmt, ...)
 {
     va_list ap;
+
+    va_start(ap, fmt);
+    USLOSS_VTrace(fmt, ap);
+    va_end(ap);
+}
+void USLOSS_VTrace(char *fmt, va_list ap)
+{
     int enabled;
 
     enabled = int_off();
-    va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     fflush(stderr);
-    va_end(ap);
     if (enabled) {
-	int_on();
+        int_on();
     }
 }
+
 /*
  *  Outputs a printf-style formatted string to stdout
  */

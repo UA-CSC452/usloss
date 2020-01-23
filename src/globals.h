@@ -3,7 +3,12 @@
 #define _globals_h
 
 #include "project.h"
+#include "usloss.h"
 #include <signal.h>
+#include <time.h>
+#include <sys/time.h>
+#include <string.h>
+#include <stdio.h>
 
 dynamic_dcl volatile int USLOSSwaiting;
 dynamic_dcl unsigned int current_psr;
@@ -45,6 +50,32 @@ dynamic_dcl int USLOSSClock(void);
         if ((USLOSS_PsrGet() & USLOSS_PSR_CURRENT_MODE) == 0) { \
             USLOSS_IllegalInstruction(); \
         } 
+
+// Global Verbosity Level and Logging
+extern int verbosity;
+static inline void verbose_log(int level, char *fmt, ...)
+{
+    if (verbosity >= (level)) {
+        struct timeval now;
+        char date[100];
+        char ms[10];
+        gettimeofday(&now, 0);
+        strftime(date, sizeof(date), "%b %d %H:%M:%S.", localtime(&now.tv_sec));
+        snprintf(ms, sizeof(ms), "%03d", (int) (now.tv_usec / 1000));
+        strncat(date, ms, sizeof(date) - sizeof(ms) - 1);
+        USLOSS_Trace("[%s] USLOSS: ", date);
+
+        va_list ap;
+        va_start(ap, fmt);
+        USLOSS_VTrace(fmt, ap);
+        va_end(ap);
+    }
+}
+
+// Verbosity Levels
+#define CTX_SWITCH_VERBOSITY 2
+#define CTX_INIT_VERBOSITY 1
+
 
 #endif	/*  _globals_h */
 

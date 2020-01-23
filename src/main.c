@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <getopt.h>
 #include "project.h"
 #include "usloss.h"
 #include "main.h"
@@ -24,8 +25,22 @@ static void starter(void) {
     rpt_sim_trap("startup returned!\n");
 }
 
+int verbosity;
 int main(int argc, char **argv)
 {
+    // Parse args
+    verbosity = 0;
+    int opt;
+    struct option longopt[] = {{"verbose", 0, NULL, 'v'}};
+    while ((opt = getopt_long(argc, argv, "v", longopt, NULL)) != -1) {
+        switch(opt) {
+        case 'v':
+            verbosity++;
+            break;
+        }
+    }
+
+    
     unsigned int psr;
     test_setup(argc, argv);
     /*  Call the per-module initialization routines */
