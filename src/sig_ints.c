@@ -6,6 +6,7 @@
 #include "project.h"
 #include "globals.h"
 #include "usloss.h"
+#include "usyscall.h"
 #include "sig_ints.h"
 #include "devices.h"
 #ifdef MMU
@@ -86,7 +87,7 @@ static void launcher(void) {
 void USLOSS_ContextInit(USLOSS_Context *ctx, char *stack, int stackSize, USLOSS_PTE *pageTable,
     void (*pc)(void))
 {
-    verbose_log(CTX_INIT_VERBOSITY, "Initializing context with stack size %d\n", stackSize);
+    LOG(CTX_INIT_VERBOSITY, "Initializing context @ %p with stack size %d\n", ctx, stackSize);
     int err_return;
     int enabled;
 
@@ -139,12 +140,17 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
         usloss_assert(trap_pending != 0, "no trap pending?");
         if (trap_pending == SYSCALL_PENDING) {
             arg = syscall_arg;
+            int sysnum = ((USLOSS_Sysargs*)arg)->number;
+            LOG(INT_VERBOSITY, "Interrupt: %d (SYSCALL %d), handler @ %p\n",
+                USLOSS_SYSCALL_INT, sysnum, USLOSS_IntVec[USLOSS_SYSCALL_INT]);
             trap_pending = 0;
             if (USLOSS_IntVec[USLOSS_SYSCALL_INT] == NULL) {
                 rpt_sim_trap("USLOSS_IntVec[USLOSS_SYSCALL_INT] is NULL!\n");
             }
             (*USLOSS_IntVec[USLOSS_SYSCALL_INT])(USLOSS_SYSCALL_INT, arg);
         } else if (trap_pending == ILLEGAL_PENDING) {
+            LOG(INT_VERBOSITY, "Interrupt: %d (ILLEGAL), handler @ %p\n",
+                ILLEGAL_PENDING, USLOSS_IntVec[ILLEGAL_PENDING]);
             trap_pending = 0;
             if (USLOSS_IntVec[USLOSS_ILLEGAL_INT] == NULL) {
                 rpt_sim_trap("USLOSS_IntVec[USLOSS_ILLEGAL_INT] is NULL!\n");
@@ -188,7 +194,7 @@ done:
  */
 void USLOSS_ContextSwitch(USLOSS_Context *old_context, USLOSS_Context *new_context)
 {
-    verbose_log(CTX_SWITCH_VERBOSITY, "Switching Context\n");
+    LOG(CTX_SWITCH_VERBOSITY, "Switching context from %p to %p\n", old_context, new_context);
     int err_return;
     int enabled;
     int status;

@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     // Parse args
     verbosity = 0;
     int opt;
-    struct option longopt[] = {{"verbose", 0, NULL, 'v'}};
+    struct option longopt[] = {{"verbose", no_argument, NULL, 'v'}};
     while ((opt = getopt_long(argc, argv, "v", longopt, NULL)) != -1) {
         switch(opt) {
         case 'v':

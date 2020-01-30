@@ -652,6 +652,8 @@ USLOSS_MmuHandler(sig, siginfoPtr, contextPtr)
     int         old_psr = current_psr;
     int         result;
 
+    LOG(INT_VERBOSITY, "Interrupt: %d (MMU), handler @ %p\n",
+        USLOSS_MMU_INT, USLOSS_IntVec[USLOSS_MMU_INT]);
     assert(siginfoPtr != NULL);
     assert(sig == SIGSEGV || sig == SIGBUS);
     debug("USLOSS_MmuHandler: address 0x%p, psr 0x%x\n", siginfoPtr->si_addr,

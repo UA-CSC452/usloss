@@ -81,12 +81,15 @@ dynamic_fun void dispatch_int(void)
     tick = ~tick;
     if (tick)
     {
-	clock_action();
-	if (USLOSS_IntVec[USLOSS_CLOCK_INT] == NULL) {
-	    rpt_sim_trap("USLOSS_IntVec[USLOSS_CLOCK_INT] is NULL!\n");
-	}
-	(*USLOSS_IntVec[USLOSS_CLOCK_INT])(USLOSS_CLOCK_DEV, 0);
-	return;
+        LOG(CLOCK_VERBOSITY, "Interrupt: %d (CLOCK), handler @ %p\n",
+            USLOSS_CLOCK_INT, USLOSS_IntVec[USLOSS_CLOCK_INT]);
+        clock_action();
+        if (USLOSS_IntVec[USLOSS_CLOCK_INT] == NULL) {
+            rpt_sim_trap("USLOSS_IntVec[USLOSS_CLOCK_INT] is NULL!\n");
+        }
+
+        (*USLOSS_IntVec[USLOSS_CLOCK_INT])(USLOSS_CLOCK_DEV, 0);
+        return;
     }
 
     /*  This is not a clock interrupt - get the next event (from a device) */
@@ -100,12 +103,18 @@ dynamic_fun void dispatch_int(void)
     switch(event_device)
     {
       case USLOSS_ALARM_DEV:
+    LOG(INT_VERBOSITY, "Interrupt: %d (ALARM), handler @ %p\n", event_device,
+        USLOSS_IntVec[event_device]);
 	unit_num = alarm_action(arg);
 	break;
       case USLOSS_DISK_DEV:
+    LOG(INT_VERBOSITY, "Interrupt: %d (DISK), handler @ %p\n", event_device,
+        USLOSS_IntVec[event_device]);
 	unit_num = disk_action(arg);
 	break;
       case USLOSS_TERM_DEV:
+    LOG(INT_VERBOSITY, "Interrupt: %d (TERM), handler @ %p\n", event_device,
+        USLOSS_IntVec[event_device]);
 	unit_num = term_action(arg);
 	break;
       default:

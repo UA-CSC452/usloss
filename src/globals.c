@@ -74,6 +74,7 @@ unsigned int USLOSS_PsrGet(void)
 
 int USLOSS_PsrSet(unsigned int new)
 {
+    LOG(PSR_SET_VERBOSITY, "Setting PSR to 0x%02x\n", new);
     int status;
     check_kernel_mode("USLOSS_PsrSet");
     (void) int_off();

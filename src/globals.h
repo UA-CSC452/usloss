@@ -53,7 +53,7 @@ dynamic_dcl int USLOSSClock(void);
 
 // Global Verbosity Level and Logging
 extern int verbosity;
-static inline void verbose_log(int level, char *fmt, ...)
+static inline void LOG(int level, char *fmt, ...)
 {
     if (verbosity >= (level)) {
         struct timeval now;
@@ -73,6 +73,9 @@ static inline void verbose_log(int level, char *fmt, ...)
 }
 
 // Verbosity Levels
+#define PSR_SET_VERBOSITY 4
+#define CLOCK_VERBOSITY 3
+#define INT_VERBOSITY 3
 #define CTX_SWITCH_VERBOSITY 2
 #define CTX_INIT_VERBOSITY 1
 
