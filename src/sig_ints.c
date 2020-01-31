@@ -150,7 +150,7 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
             (*USLOSS_IntVec[USLOSS_SYSCALL_INT])(USLOSS_SYSCALL_INT, arg);
         } else if (trap_pending == ILLEGAL_PENDING) {
             LOG(INT_VERBOSITY, "Interrupt: %d (ILLEGAL), handler @ %p\n",
-                ILLEGAL_PENDING, USLOSS_IntVec[ILLEGAL_PENDING]);
+                USLOSS_ILLEGAL_INT, USLOSS_IntVec[USLOSS_ILLEGAL_INT]);
             trap_pending = 0;
             if (USLOSS_IntVec[USLOSS_ILLEGAL_INT] == NULL) {
                 rpt_sim_trap("USLOSS_IntVec[USLOSS_ILLEGAL_INT] is NULL!\n");
