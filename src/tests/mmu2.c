@@ -31,10 +31,10 @@ startup(int argc, char **argv)
 
     status = USLOSS_MmuInit(2, 2, 2, USLOSS_MMU_MODE_TLB);
     assert(status == USLOSS_MMU_OK);
-    segment = USLOSS_MmuRegion(&pages);
+    status = USLOSS_MmuGetConfig((void **)&segment, NULL, &size, &pages, NULL);
+    assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(pages == 2);
-    size = USLOSS_MmuPageSize();
 
     // Map page 0 to frame 0
     status = USLOSS_MmuMap(0, 0, 0, USLOSS_MMU_PROT_RW);

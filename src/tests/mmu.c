@@ -424,8 +424,6 @@ startup(int argc, char **argv)
     int		status;
     int		dummy;
 
-    pageSize = USLOSS_MmuPageSize();
-    //USLOSS_Console("Page size = %d\n", pageSize);
     for (i = 0; i < USLOSS_NUM_INTS; i++) {
 	   USLOSS_IntVec[i] = dummy_handler;
     }
@@ -443,7 +441,9 @@ startup(int argc, char **argv)
 
     status = USLOSS_MmuInit(state.maps,state.pages,state.frames, USLOSS_MMU_MODE_TLB);
     assert(status == USLOSS_MMU_OK);
-    segment = USLOSS_MmuRegion(&dummy);
+
+    status = USLOSS_MmuGetConfig((void **)&segment, NULL, &pageSize, &dummy, NULL);
+    assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(dummy >= state.pages);
 

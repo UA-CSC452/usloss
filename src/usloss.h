@@ -272,7 +272,6 @@ typedef struct USLOSS_PTE {
 
 extern int 	USLOSS_MmuInit(int numMaps, int numPages, int numFrames, int mode) 
                             __attribute__((warn_unused_result));
-extern void	*USLOSS_MmuRegion(int *numPagesPtr) __attribute__((warn_unused_result));
 extern int	USLOSS_MmuDone(void) __attribute__((warn_unused_result));
 extern int	USLOSS_MmuMap(int tag, int page, int frame, int protection) 
                             __attribute__((warn_unused_result));
@@ -284,10 +283,11 @@ extern int	USLOSS_MmuSetAccess(int frame, int access) __attribute__((warn_unused
 extern int	USLOSS_MmuGetAccess(int frame, int *accessPtr) __attribute__((warn_unused_result));
 extern int	USLOSS_MmuSetTag(int tag) __attribute__((warn_unused_result));
 extern int	USLOSS_MmuGetTag(int *tagPtr) __attribute__((warn_unused_result));
-extern int	USLOSS_MmuPageSize(void) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuTouch(void *addr) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuSetPageTable(USLOSS_PTE *table) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuGetPageTable(USLOSS_PTE **table) __attribute__((warn_unused_result));
+extern int  USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, 
+                                int *numPages, int *numFrames) __attribute((warn_unused_result));
 
 
 

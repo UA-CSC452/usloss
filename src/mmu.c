@@ -54,6 +54,7 @@ typedef struct MMUInfo {
     int         numFrames;      
     MMUFrame    *frames;
     int         numPages;
+    int         pageSize;
     MMUPage     *pages[USLOSS_MMU_NUM_TAG];
     int         maxMaps;        /* max # valid mappings */
     int         numMaps;        /* current # of mappings */
@@ -62,6 +63,7 @@ typedef struct MMUInfo {
     int         tag;            /* Current tag */
     USLOSS_PTE  *pageTable;     /* Page table, if there is one. */
     int         mode;           /* PAGETABLE or TLB */
+    void        *pmStart;       /* Start address of Physical Memory */
 } MMUInfo;
 
 static MMUInfo *mmuPtr = NULL;
@@ -125,7 +127,7 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
 
     check_kernel_mode("USLOSS_MmuInit");
     debug("USLOSS_MmuInit: %d pages %d frames\n", numPages, numFrames);
-    mmuPageSize = USLOSS_MmuPageSize();
+    mmuPageSize = sysconf(_SC_PAGESIZE);
     if (mmuPtr != NULL) {
         return USLOSS_MMU_ERR_ON;
     }
@@ -180,6 +182,10 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
     mmuPtr->cause = 0;
     mmuPtr->tag = 0;
     mmuPtr->mode = mode;
+    mmuPtr->pageSize = mmuPageSize;
+    mmuPtr->pmStart = mmap(0, numFrames * mmuPageSize, PROT_READ | PROT_WRITE,
+        MAP_SHARED, fd, 0);
+    
     /*
      * Allocate the page and frame information. Also unmap the region.
      */
@@ -202,29 +208,40 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
 /*
  *----------------------------------------------------------------------
  *
- * USLOSS_MmuRegion --
+ * USLOSS_MmuGetConfig --
  *
- *      Returns a pointer to the VM region
+ *      Fills in information about the mmu
  *
  * Results:
- *      Pointer to the VM region.
+ *      fills in mmu information into the pointers provided
  *
  * Side effects:
  *      None.
  *
  *----------------------------------------------------------------------
  */
-void *
-USLOSS_MmuRegion(numPagesPtr)
-    int         *numPagesPtr;   /* # pages in region */
+int
+USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, int *numPages, int *numFrames)
 {
+    check_kernel_mode("USLOSS_MmuGetConfig");
+    // make sure mmu is initialized
     if (mmuPtr == NULL) {
-        *numPagesPtr = 0;
-        return NULL;
+        return USLOSS_MMU_ERR_OFF;
     }
-    *numPagesPtr = mmuPtr->numPages;
-    debug("USLOSS_MmuRegion: 0x%p %d pages\n", mmuPtr->region, mmuPtr->numPages);
-    return mmuPtr->region;
+
+    // fill in info only if non-null
+    if (vmRegion != NULL)
+        *vmRegion = mmuPtr->region;
+    if (pmAddr != NULL)
+        *pmAddr = mmuPtr->pmStart;
+    if (pageSize != NULL)
+        *pageSize = mmuPtr->pageSize;
+    if (numPages != NULL)
+        *numPages = mmuPtr->numPages;
+    if (numFrames != NULL)
+        *numFrames = mmuPtr->numFrames;
+
+    return USLOSS_MMU_OK;
 }
 
 /*
@@ -942,29 +959,6 @@ SetTag(new)
     }
     return USLOSS_MMU_OK;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * USLOSS_MmuPageSize
- *
- *      Returns the page size.
- *
- * Results:
- *      Number of bytes in a page.
- *
- * Side effects:
- *      None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-USLOSS_MmuPageSize(void)
-{
-    return sysconf(_SC_PAGESIZE);
-}
-
 
 /*
  *----------------------------------------------------------------------

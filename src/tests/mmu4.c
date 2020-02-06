@@ -189,10 +189,10 @@ startup(int argc, char **argv)
 
     status = USLOSS_MmuInit(NUMPAGES, NUMPAGES, NUMPAGES, USLOSS_MMU_MODE_PAGETABLE);
     assert(status == USLOSS_MMU_OK);
-    segment = USLOSS_MmuRegion(&pages);
+    status = USLOSS_MmuGetConfig((void **)&segment, NULL, &pageSize, &pages, NULL);
+    assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(pages == NUMPAGES);
-    pageSize = USLOSS_MmuPageSize();
 
     switch(test) {
         case 0: Test0(); break;
