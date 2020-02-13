@@ -246,6 +246,7 @@ typedef struct USLOSS_PTE {
 #define USLOSS_MMU_ERR_ACC      9   /* Invalid access bits */
 #define USLOSS_MMU_ERR_MAPS     10  /* Too many mappings */
 #define USLOSS_MMU_ERR_MODE     11  /* Invalid MMU mode */
+#define USLOSS_MMU_ERR_NULL     12  /* NULL arg given */
 
 /*
  * Protections

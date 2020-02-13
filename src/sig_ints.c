@@ -45,12 +45,11 @@ dynamic_fun void set_timer(void)
     value.it_interval.tv_usec = ALARM_TIME;
     value.it_value.tv_sec = 0;
     value.it_value.tv_usec = ALARM_TIME;
-#ifdef VIRTUAL_TIME
-    setitimer(ITIMER_VIRTUAL, &value, &ovalue);
-#else
-    setitimer(ITIMER_REAL, &value, &ovalue);
-#endif
-
+    if (virtual_time) {
+        setitimer(ITIMER_VIRTUAL, &value, &ovalue);
+    } else {
+        setitimer(ITIMER_REAL, &value, &ovalue);
+    }
 }
 
 dynamic_fun void stop_timer(void)
@@ -62,11 +61,11 @@ dynamic_fun void stop_timer(void)
     value.it_interval.tv_usec = 0;
     value.it_value.tv_sec = 0;
     value.it_value.tv_usec = 0;
-#ifdef VIRTUAL_TIME
-    setitimer(ITIMER_VIRTUAL, &value, &ovalue);
-#else
-    setitimer(ITIMER_REAL, &value, &ovalue);
-#endif
+    if (virtual_time) {
+        setitimer(ITIMER_VIRTUAL, &value, &ovalue);
+    } else {
+        setitimer(ITIMER_REAL, &value, &ovalue);
+    }
 }
 
 static void launcher(void) {
@@ -125,9 +124,8 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
     check_interrupts();
     /*  Switch depending upon what type of signal this is - SIGUSR1 is used
         for system calls, SIG_ALARM is used for devices */
-    switch(sig)
-    {
-      case SIG_ALARM:   /*  Device or clock interrupt - to dispatch routine */
+    /*  Changed SIG_ALARM to be decided at runtime so it needs to use an if */
+    if (sig == SIG_ALARM) {   /*  Device or clock interrupt - to dispatch routine */
         USLOSSwaiting = 0;    /*  or make this conditional depending on terminal? */
         pclock_ticks++;
         partial_ticks = 0;
@@ -135,7 +133,9 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
             goto done;
         }
         dispatch_int();
-        break;
+    } else {
+    switch(sig)
+    {
       case SIGUSR1:
         usloss_assert(trap_pending != 0, "no trap pending?");
         if (trap_pending == SYSCALL_PENDING) {
@@ -169,7 +169,8 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
       default:
         vrpt_cond("Bad signal");
         break;
-    }
+    } // end switch
+    } // end else
 
     /*  Finished with any interrupt handling - reset variables, set up the
         timer for the next interrupt, and go back to the specified context */
@@ -295,11 +296,11 @@ void USLOSS_WaitInt(void)
     }
     USLOSSwaiting = 1;
     while (USLOSSwaiting) {
-#ifdef VIRTUAL_TIME
-        raise(SIG_ALARM);
-#else
-        pause();
-#endif
+        if (virtual_time) {
+            raise(SIG_ALARM);
+        } else {
+            pause();
+        }
     }
 }
 

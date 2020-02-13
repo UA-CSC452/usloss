@@ -25,20 +25,55 @@ static void starter(void) {
     rpt_sim_trap("startup returned!\n");
 }
 
-int verbosity;
+static void print_options()
+{
+    printf("USLOSS Options:\n");
+    printf("  -h, --help               Print list of options and exit.\n");
+    printf("  -r, --real-time          Set USLOSS to use real time. This is the default mode.\n");
+    printf("  -R, --virtual-time       Set USLOSS to use virtual time.\n");
+    printf("  -v, --verbose            Increase the verbosity level of USLOSS. The verbosity level\n");
+    printf("                           is equal to the number of times this option is set.\n");
+    printf("                           LEVELS:\n");
+    printf("                           1 -- Context Creation\n");
+    printf("                           2 -- Context Switches\n");
+    printf("                           3 -- All interrupts\n");
+    printf("                           4 -- Change in PSR\n");
+}
+
+// global flags
+int verbosity, virtual_time, SIG_ALARM;
+
 int main(int argc, char **argv)
 {
     // Parse args
     verbosity = 0;
+    virtual_time = FALSE;
     int opt;
-    struct option longopt[] = {{"verbose", no_argument, NULL, 'v'}};
-    while ((opt = getopt_long(argc, argv, "v", longopt, NULL)) != -1) {
+    struct option longopt[] = {
+        {"verbose", no_argument, NULL, 'v'},
+        {"real-time", no_argument, NULL, 'r'},
+        {"virtual-time", no_argument, NULL, 'R'},
+        {"help", no_argument, NULL, 'h'}
+    };
+    while ((opt = getopt_long(argc, argv, "vrRh", longopt, NULL)) != -1) {
         switch(opt) {
         case 'v':
             verbosity++;
             break;
+        case 'r':
+            virtual_time = FALSE;
+            break;
+        case 'R':
+            virtual_time = TRUE;
+            break;
+        case 'h':
+            print_options();
+            return 0;
         }
     }
+
+    // SIG_ALARM is now defined at runtime
+    SIG_ALARM = virtual_time ? SIGVTALRM : SIGALRM;
 
     
     unsigned int psr;

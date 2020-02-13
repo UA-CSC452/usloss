@@ -20,11 +20,8 @@ dynamic_dcl int dumpcore;
 
 #define USLOSS_PSR_MAGIC 0x45200
 
-#ifdef VIRTUAL_TIME
-#define SIG_ALARM SIGVTALRM
-#else
-#define SIG_ALARM SIGALRM
-#endif
+extern int virtual_time;
+extern int SIG_ALARM;
 
 #define TRUE 1
 #define FALSE 0

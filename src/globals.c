@@ -175,7 +175,8 @@ void USLOSS_Halt(int status)
 {
     int err_return;
 
-    check_kernel_mode("USLOSS_Halt");
+    // We don't check kernel mode here because this causes issues with writing
+    // testcases.
     (void) int_off();
     finish_status = status;
     err_return = setcontext(&finish_context.context);	

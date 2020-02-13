@@ -173,6 +173,7 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
     region += mmuPageSize;
 
     mmuPtr = (MMUInfo *) malloc(sizeof(MMUInfo));
+    assert(mmuPtr != NULL);
     mmuPtr->fd = fd;
     mmuPtr->numPages = numPages;
     mmuPtr->numFrames = numFrames;
@@ -185,6 +186,7 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
     mmuPtr->pageSize = mmuPageSize;
     mmuPtr->pmStart = mmap(0, numFrames * mmuPageSize, PROT_READ | PROT_WRITE,
         MAP_SHARED, fd, 0);
+    assert(mmuPtr->pmStart != MAP_FAILED);
     
     /*
      * Allocate the page and frame information. Also unmap the region.
@@ -229,17 +231,23 @@ USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, int *numPages
         return USLOSS_MMU_ERR_OFF;
     }
 
-    // fill in info only if non-null
-    if (vmRegion != NULL)
-        *vmRegion = mmuPtr->region;
-    if (pmAddr != NULL)
-        *pmAddr = mmuPtr->pmStart;
-    if (pageSize != NULL)
-        *pageSize = mmuPtr->pageSize;
-    if (numPages != NULL)
-        *numPages = mmuPtr->numPages;
-    if (numFrames != NULL)
-        *numFrames = mmuPtr->numFrames;
+    // make sure the args passed in aren't NULL
+    if (vmRegion == NULL)
+       return USLOSS_MMU_ERR_NULL; 
+    if (pmAddr == NULL)
+        return USLOSS_MMU_ERR_NULL;
+    if (pageSize == NULL)
+        return USLOSS_MMU_ERR_NULL;
+    if (numPages == NULL)
+        return USLOSS_MMU_ERR_NULL;
+    if (numFrames == NULL)
+        return USLOSS_MMU_ERR_NULL;
+
+    *vmRegion = mmuPtr->region;
+    *pmAddr = mmuPtr->pmStart;
+    *pageSize = mmuPtr->pageSize;
+    *numPages = mmuPtr->numPages;
+    *numFrames = mmuPtr->numFrames;
 
     return USLOSS_MMU_OK;
 }
@@ -512,6 +520,12 @@ USLOSS_MmuGetMap(tag, page, framePtr, protPtr)
     if (pagePtr->frame == -1) {
         return USLOSS_MMU_ERR_NOMAP;
     }
+
+    if (framePtr == NULL)
+        return USLOSS_MMU_ERR_NULL;
+    if (protPtr == NULL)
+        return USLOSS_MMU_ERR_NULL;
+
     *framePtr = pagePtr->frame;
     *protPtr = pagePtr->virtProt;
     return USLOSS_MMU_OK;
@@ -632,6 +646,10 @@ USLOSS_MmuGetAccess(frame, accessPtr)
     if ((frame < 0) || (frame >= mmuPtr->numFrames)) {
         return USLOSS_MMU_ERR_FRAME;
     }
+    if (accessPtr == NULL) {
+        return USLOSS_MMU_ERR_NULL;
+    }
+
     *accessPtr = mmuPtr->frames[frame].access;
     return USLOSS_MMU_OK;
 }
@@ -887,6 +905,9 @@ USLOSS_MmuGetTag(tagPtr)
     if (mmuPtr->mode != USLOSS_MMU_MODE_TLB) {
         return USLOSS_MMU_ERR_MODE;
     }
+    if (tagPtr == NULL) {
+        return USLOSS_MMU_ERR_NULL;
+    }
     *tagPtr = mmuPtr->tag;
     return USLOSS_MMU_OK;
 }
@@ -1104,6 +1125,9 @@ USLOSS_MmuGetPageTable(USLOSS_PTE **pageTable)
     if (mmuPtr->mode != USLOSS_MMU_MODE_PAGETABLE) {
         return USLOSS_MMU_ERR_MODE;
     }
+    if (pageTable == NULL) {
+        return USLOSS_MMU_ERR_NULL;
+    }
     *pageTable = mmuPtr->pageTable;
     return USLOSS_MMU_OK;
 }
@@ -1131,6 +1155,9 @@ USLOSS_MmuGetMode(int *mode)
     check_kernel_mode("USLOSS_MmuGetMode");
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
+    }
+    if (mode == NULL) {
+        return USLOSS_MMU_ERR_NULL;
     }
     *mode = mmuPtr->mode;
     return USLOSS_MMU_OK;

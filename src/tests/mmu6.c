@@ -1,14 +1,7 @@
 /*
- * mmu3.c
+ * mmu6.c
  *
- * This is a simple test that demonstrates the use of the USLOSS MMU in page table mode. It creates
- * a VM region with 2 entries in the page table, 2 pages, and 2 frames. It then maps page 0 -> frame
- * 0 and writes 'A'. It then maps page 0 -> frame 1 and verifies that it reads '8' (the default
- * value with which page frames are filled). It then writes 'B' and maps page 0 -> frame 0 and
- * verifies that it still reads 'A'. Finally, it maps page 1 -> frame 0 and verifies that it reads
- * 'A' there too.
- *
- * To use this test compile it and link it against the USLOSS library.
+ * Simple test to make sure that the OS has full access to Physical Memory
  */
 
 #include <stdio.h>
@@ -22,8 +15,8 @@
 void 
 startup(int argc, char **argv)
 {
-    int		   status;
-    int		   pages;
+    int        status;
+    int        pages;
     char        *segment;
     int         size;
     USLOSS_PTE  pageTable[2];
@@ -39,9 +32,9 @@ startup(int argc, char **argv)
 
     status = USLOSS_MmuInit(2, 2, 2, USLOSS_MMU_MODE_PAGETABLE);
     assert(status == USLOSS_MMU_OK);
-    char *pm_dummy;
+    char *pm;
     int nf_dummy;
-    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm_dummy, &size, &pages, &nf_dummy);
+    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm, &size, &pages, &nf_dummy);
     assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(pages == 2);
@@ -58,6 +51,7 @@ startup(int argc, char **argv)
 
     *segment = 'A';
     assert(*segment == 'A');
+    assert(*pm == 'A');
 
     // Now map page 0 to frame 1 and write 'B'
 
@@ -69,6 +63,7 @@ startup(int argc, char **argv)
     assert(*segment == '8');
     *segment = 'B';
     assert(*segment == 'B');
+    assert(*(pm + size) == 'B');
 
     // Go back to frame 0 and read 'A'
 
@@ -76,6 +71,7 @@ startup(int argc, char **argv)
     status = USLOSS_MmuSetPageTable(pageTable);
     assert(status == 0);
     assert(*segment == 'A');
+    assert(*pm == 'A');
 
     // Map page 1 to frame 0 and read 'A' there too.
 
