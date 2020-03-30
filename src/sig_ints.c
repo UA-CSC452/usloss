@@ -140,13 +140,20 @@ static void sighandler(int sig, siginfo_t *sigstuff, void *oldcontext)
         usloss_assert(trap_pending != 0, "no trap pending?");
         if (trap_pending == SYSCALL_PENDING) {
             arg = syscall_arg;
-            int sysnum = ((USLOSS_Sysargs*)arg)->number;
-            LOG(INT_VERBOSITY, "Interrupt: %d (SYSCALL %d), handler @ %p\n",
-                USLOSS_SYSCALL_INT, sysnum, USLOSS_IntVec[USLOSS_SYSCALL_INT]);
             trap_pending = 0;
             if (USLOSS_IntVec[USLOSS_SYSCALL_INT] == NULL) {
                 rpt_sim_trap("USLOSS_IntVec[USLOSS_SYSCALL_INT] is NULL!\n");
             }
+            int sysnum;
+            if (arg == NULL) {
+                LOG(INT_VERBOSITY, "Warning: Syscall arg is NULL\n");
+                sysnum = -1;
+            } else {
+                sysnum = ((USLOSS_Sysargs*)arg)->number;
+            }
+            LOG(INT_VERBOSITY, "Interrupt: %d (SYSCALL %d), handler @ %p\n",
+                USLOSS_SYSCALL_INT, sysnum, USLOSS_IntVec[USLOSS_SYSCALL_INT]);
+            // call syscall handler
             (*USLOSS_IntVec[USLOSS_SYSCALL_INT])(USLOSS_SYSCALL_INT, arg);
         } else if (trap_pending == ILLEGAL_PENDING) {
             LOG(INT_VERBOSITY, "Interrupt: %d (ILLEGAL), handler @ %p\n",
