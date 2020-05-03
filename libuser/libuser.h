@@ -34,6 +34,17 @@ extern int Sys_SemCreate(char *name, int value, int *semaphore) CHECKRETURN;
 extern int Sys_SemP(int semaphore) CHECKRETURN;
 extern int Sys_SemV(int semaphore) CHECKRETURN;
 extern int Sys_SemFree(int semaphore) CHECKRETURN;
+extern int Sys_LockCreate(char *name, int *lid) CHECKRETURN;
+extern int Sys_LockFree(int lid) CHECKRETURN;
+extern int Sys_LockName(int lid, char *name) CHECKRETURN;
+extern int Sys_Lock(int lid) CHECKRETURN;
+extern int Sys_Unlock(int lid) CHECKRETURN;
+extern int Sys_CondCreate(char *name, int *vid) CHECKRETURN;
+extern int Sys_CondFree(int vid) CHECKRETURN;
+extern int Sys_CondName(int vid, char *name) CHECKRETURN;
+extern int Sys_CondWait(int vid, int lid) CHECKRETURN;
+extern int Sys_Signal(int vid, int lid) CHECKRETURN;
+extern int Sys_NakedSignal(int vid) CHECKRETURN;
 
 extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region) CHECKRETURN;
 extern void Sys_VmShutdown(void);

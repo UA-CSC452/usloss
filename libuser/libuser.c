@@ -351,6 +351,288 @@ void Sys_GetPID(int *pid)
     return;
 } /* end of GetPID */
 
+/*
+ *  Routine:  Sys_LockName
+ *
+ *  Description: This is the call entry point for getting a lock name.
+ *      
+ *
+ *  Arguments:    int lid    -- lock id
+ *                char *name -- buffer for name to be stored 
+ *
+ *  Return Value:
+ *      P1_INVALID_LID:      the lock id is invalid
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_LockName(int lid, char *name)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_LOCKNAME;
+    sa.arg1 = (void *) lid;
+    sa.arg2 = (void *) name;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_LockName */
+
+
+
+/*
+ *  Routine:  Sys_LockFree
+ *
+ *  Description: This is the call entry point for free a lock
+ *      
+ *
+ *  Arguments:    int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_LID:      the cond id is invalid
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_LockFree(int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_LOCKFREE;
+    sa.arg1 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_LockFree */
+
+
+/*
+ *  Routine:  Sys_LockCreate
+ *
+ *  Description: This is the call entry point for creating a lock
+ *      
+ *
+ *  Arguments:    int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_LockCreate(char *name, int *lid)
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_LOCKCREATE;
+    sa.arg1 = (void *) lid;
+    sa.arg2 = (void *) name;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_LockCreate */
+
+/*
+ *  Routine:  Sys_Lock
+ *
+ *  Description: This is the call entry point for locking
+ *      
+ *
+ *  Arguments:    int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_LID:      the lock id is invalid
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_Lock(int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_LOCK;
+    sa.arg1 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_Lock */
+
+/*
+ *  Routine:  Sys_Unlock
+ *
+ *  Description: This is the call entry point for unlocking
+ *      
+ *
+ *  Arguments:    int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_LID:      the lock id is invalid
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_Unlock(int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_UNLOCK;
+    sa.arg1 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_Unlock */
+
+/*
+ *  Routine:  Sys_CondName
+ *
+ *  Description: This is the call entry point for getting a condition var name.
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *                char *name -- buffer for name to be stored 
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_CondName(int vid, char *name)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_CONDNAME;
+    sa.arg1 = (void *) vid;
+    sa.arg2 = (void *) name;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_CondName */
+
+/*
+ *  Routine:  Sys_CondFree
+ *
+ *  Description: This is the call entry point for free a condition var
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_CondFree(int vid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_CONDFREE;
+    sa.arg1 = (void *) vid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_CondFree */
+
+/*
+ *  Routine:  Sys_CondCreate
+ *
+ *  Description: This is the call entry point for creating a lock
+ *      
+ *
+ *  Arguments:    int vid    -- cond var id
+ *                char *name -- name of the cond var
+ *
+ *  Return Value:
+ *      P1_NAME_IS_NULL:     name is NULL
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_CondCreate(char *name, int *vid)
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_CONDCREATE;
+    sa.arg1 = (void *) vid;
+    sa.arg2 = (void *) name;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_CondCreate */
+
+/*
+ *  Routine:  Sys_CondWait
+ *
+ *  Description: This is the call entry point for waiting on condition var
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *                int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_LOCK_NOT_HELD:    lock given is not held
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_CondWait(int vid, int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_CONDWAIT;
+    sa.arg1 = (void *) vid;
+    sa.arg2 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_CondWait */
+
+/*
+ *  Routine:  Sys_Signal
+ *
+ *  Description: This is the call entry point for signal on cond var
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *                int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_LOCK_NOT_HELD:    lock given is not held
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_Signal(int vid, int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_SIGNAL;
+    sa.arg1 = (void *) vid;
+    sa.arg2 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_Signal */
+
+/*
+ *  Routine:  Sys_NakedSignal
+ *
+ *  Description: This is the call entry point for naked signal on cond var
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_NakedSignal(int vid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_NAKEDSIGNAL;
+    sa.arg1 = (void *) vid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_NakedSignal */
 
 /*
  *  Routine:  Sys_SemName
