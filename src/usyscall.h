@@ -40,14 +40,15 @@
 #define SYS_CONDWAIT        32
 #define SYS_SIGNAL          33
 #define SYS_NAKEDSIGNAL     34
+#define SYS_BROADCAST       35
 
-#define SYS_VMINIT          35
-#define SYS_VMSHUTDOWN      36
-#define SYS_HEAPALLOC       37
-#define SYS_HEAPFREE        38
-#define SYS_PROTECT         39
-#define SYS_SHARE           40
-#define SYS_COW             41
+#define SYS_VMINIT          36
+#define SYS_VMSHUTDOWN      37
+#define SYS_HEAPALLOC       38
+#define SYS_HEAPFREE        39
+#define SYS_PROTECT         40
+#define SYS_SHARE           41
+#define SYS_COW             42
 
 // Leave some room for growth
 

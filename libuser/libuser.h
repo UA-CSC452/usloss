@@ -45,6 +45,7 @@ extern int Sys_CondName(int vid, char *name) CHECKRETURN;
 extern int Sys_CondWait(int vid, int lid) CHECKRETURN;
 extern int Sys_Signal(int vid, int lid) CHECKRETURN;
 extern int Sys_NakedSignal(int vid) CHECKRETURN;
+extern int Sys_Broadcast(int vid, int lid) CHECKRETURN;
 
 extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region) CHECKRETURN;
 extern void Sys_VmShutdown(void);

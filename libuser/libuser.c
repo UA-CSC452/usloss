@@ -611,6 +611,33 @@ int Sys_Signal(int vid, int lid)
 } /* end of Sys_Signal */
 
 /*
+ *  Routine:  Sys_Broadcast
+ *
+ *  Description: This is the call entry point for broadcasting signal
+ *      
+ *
+ *  Arguments:    int vid    -- condition var id
+ *                int lid    -- lock id
+ *
+ *  Return Value:
+ *      P1_INVALID_VID:      the cond id is invalid
+ *      P1_LOCK_NOT_HELD:    lock given is not held
+ *      P1_SUCCESS:          success
+ *
+ */
+int Sys_Broadcast(int vid, int lid)                       
+{
+    USLOSS_Sysargs sa;
+
+    CHECKMODE;
+    sa.number = SYS_BROADCAST;
+    sa.arg1 = (void *) vid;
+    sa.arg2 = (void *) lid;
+    USLOSS_Syscall((void *) &sa);
+    return (int) sa.arg4;
+} /* end of Sys_Broadcast */
+
+/*
  *  Routine:  Sys_NakedSignal
  *
  *  Description: This is the call entry point for naked signal on cond var
