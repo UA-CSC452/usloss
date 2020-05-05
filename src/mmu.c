@@ -225,7 +225,6 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
 int
 USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, int *numPages, int *numFrames)
 {
-    check_kernel_mode("USLOSS_MmuGetConfig");
     // make sure mmu is initialized
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
