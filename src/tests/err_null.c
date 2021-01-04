@@ -13,8 +13,6 @@
 
 void startup(int argc, char **argv)
 {
-    char *a;
-    int b;
     int rc;
 
     rc = USLOSS_MmuInit(2, 2, 2, USLOSS_MMU_MODE_PAGETABLE);
