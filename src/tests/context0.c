@@ -25,6 +25,11 @@ void
 startup(int argc, char **argv)
 {
     USLOSS_Console("Startup\n");
+    USLOSS_Console("Argc: %d\n", argc);
+    USLOSS_Console("Args:\n");
+    for (int i = 0; i < argc; i++) {
+        USLOSS_Console("%d: %s\n", i, argv[i]);
+    }
     helper();
 }
 void
