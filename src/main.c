@@ -57,18 +57,18 @@ int main(int argc, char **argv)
     };
     while ((opt = getopt_long(argc, argv, "vrRh", longopt, NULL)) != -1) {
         switch(opt) {
-        case 'v':
-            verbosity++;
-            break;
-        case 'r':
-            virtual_time = FALSE;
-            break;
-        case 'R':
-            virtual_time = TRUE;
-            break;
-        case 'h':
-            print_options();
-            return 0;
+            case 'v':
+                verbosity++;
+                break;
+            case 'r':
+                virtual_time = FALSE;
+                break;
+            case 'R':
+                virtual_time = TRUE;
+                break;
+            case 'h':
+                print_options();
+                return 0;
         }
     }
 
@@ -87,8 +87,8 @@ int main(int argc, char **argv)
     term_init();
     sig_ints_init();	/*  Must disable interrupts */
 
-    gargc = argc;
-    gargv = argv;
+    gargc = argc - optind;
+    gargv = &argv[optind];
     /*  Set up the initial context that runs the user's startup code */
     getcontext(&startup_context.context);
     startup_context.context.uc_stack.ss_sp = stack;
