@@ -288,7 +288,8 @@ extern int  USLOSS_MmuTouch(void *addr) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuSetPageTable(USLOSS_PTE *table) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuGetPageTable(USLOSS_PTE **table) __attribute__((warn_unused_result));
 extern int  USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, 
-                                int *numPages, int *numFrames) __attribute((warn_unused_result));
+                                int *numPages, int *numFrames, int *mode) 
+                                __attribute((warn_unused_result));
 
 
 
