@@ -21,18 +21,8 @@ void startup(int argc, char **argv)
     ASSERT_EQ(rc, USLOSS_MMU_OK);
 
     // MmuGetConfig
-    rc = USLOSS_MmuGetConfig(NULL, NULL, NULL, NULL, NULL);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
-    rc = USLOSS_MmuGetConfig((void**)&a, (void**)&a, &b, &b, NULL);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
-    rc = USLOSS_MmuGetConfig((void**)&a, (void**)&a, &b, NULL, &b);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
-    rc = USLOSS_MmuGetConfig((void**)&a, (void**)&a, NULL, &b, &b);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
-    rc = USLOSS_MmuGetConfig((void**)&a, NULL, &b, &b, &b);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
-    rc = USLOSS_MmuGetConfig(NULL, (void**)&a, &b, &b, &b);
-    ASSERT_EQ(rc, USLOSS_MMU_ERR_NULL);
+    rc = USLOSS_MmuGetConfig(NULL, NULL, NULL, NULL, NULL, NULL);
+    ASSERT_EQ(rc, USLOSS_MMU_OK);
 
     // others
     rc = USLOSS_MmuGetAccess(0, NULL);
