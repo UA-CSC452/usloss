@@ -33,8 +33,7 @@ startup(int argc, char **argv)
     status = USLOSS_MmuInit(2, 2, 2, USLOSS_MMU_MODE_PAGETABLE);
     assert(status == USLOSS_MMU_OK);
     char *pm;
-    int nf_dummy;
-    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm, &size, &pages, &nf_dummy);
+    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm, &size, &pages, NULL, NULL);
     assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(pages == 2);

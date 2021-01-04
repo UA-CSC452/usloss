@@ -27,14 +27,13 @@ startup(int argc, char **argv)
     char    *pmem;
     int     size;
 
-    // this should not succeed
-    status = USLOSS_MmuGetConfig(NULL, NULL, NULL, NULL, NULL);
-    assert(status != USLOSS_MMU_OK);
+    // this should fail as the MMU is not initialized
+    status = USLOSS_MmuGetConfig(NULL, NULL, NULL, NULL, NULL, NULL);
+    assert(status == USLOSS_MMU_ERR_OFF);
 
     status = USLOSS_MmuInit(NUM_MAPS, NUM_PAGES, NUM_FRAMES, USLOSS_MMU_MODE_TLB);
     assert(status == USLOSS_MMU_OK);
-    int nf_dummy;
-    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pmem, &size, &pages, &nf_dummy);
+    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pmem, &size, &pages, NULL, NULL);
     assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
     assert(pmem != NULL);

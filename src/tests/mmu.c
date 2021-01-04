@@ -393,7 +393,7 @@ void
 Test8(void)
 {
     //USLOSS_Console("Test 8\n");
-    //USLOSS_Console("This should cause a segmentation violation.\n");
+    USLOSS_Console("This should cause a segmentation violation.\n");
     *((volatile int *) NULL) = 0;
     USLOSS_Console("Test 8 still running?\n");
 }
@@ -422,7 +422,6 @@ startup(int argc, char **argv)
 {
     int		i;
     int		status;
-    int		dummy;
 
     for (i = 0; i < USLOSS_NUM_INTS; i++) {
 	   USLOSS_IntVec[i] = dummy_handler;
@@ -443,11 +442,14 @@ startup(int argc, char **argv)
     assert(status == USLOSS_MMU_OK);
 
     char *pm;
-    int numframes;
-    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm, &pageSize, &dummy, &numframes);
+    int numFrames;
+    int numPages;
+    status = USLOSS_MmuGetConfig((void **)&segment, (void **)&pm, &pageSize, &numPages, &numFrames,
+                                 NULL);
     assert(status == USLOSS_MMU_OK);
     assert(segment != NULL);
-    assert(dummy >= state.pages);
+    assert(numPages == state.pages);
+    assert(numFrames == state.frames);
 
     tag = 0;
 
