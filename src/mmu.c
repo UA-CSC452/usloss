@@ -222,35 +222,29 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
  *
  *----------------------------------------------------------------------
  */
+
+#define SET(foo, bar) if ((foo) != NULL) *(foo) = (bar)
+
 int
-USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, int *numPages, int *numFrames)
+USLOSS_MmuGetConfig(void **vmRegion, void **pmAddr, int *pageSize, int *numPages, int *numFrames,
+                    int *mode)
 {
     // make sure mmu is initialized
     if (mmuPtr == NULL) {
         return USLOSS_MMU_ERR_OFF;
     }
 
-    // make sure the args passed in aren't NULL
-    if (vmRegion == NULL)
-       return USLOSS_MMU_ERR_NULL; 
-    if (pmAddr == NULL)
-        return USLOSS_MMU_ERR_NULL;
-    if (pageSize == NULL)
-        return USLOSS_MMU_ERR_NULL;
-    if (numPages == NULL)
-        return USLOSS_MMU_ERR_NULL;
-    if (numFrames == NULL)
-        return USLOSS_MMU_ERR_NULL;
-
-    *vmRegion = mmuPtr->region;
-    *pmAddr = mmuPtr->pmStart;
-    *pageSize = mmuPtr->pageSize;
-    *numPages = mmuPtr->numPages;
-    *numFrames = mmuPtr->numFrames;
+    SET(vmRegion, mmuPtr->region);
+    SET(pmAddr, mmuPtr->pmStart);
+    SET(pageSize, mmuPtr->pageSize);
+    SET(numPages, mmuPtr->numPages);
+    SET(numFrames, mmuPtr->numFrames);
+    SET(mode, mmuPtr->mode);
 
     return USLOSS_MMU_OK;
 }
 
+#undef SET
 /*
  *----------------------------------------------------------------------
  *
