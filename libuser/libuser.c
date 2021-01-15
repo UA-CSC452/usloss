@@ -311,14 +311,14 @@ void Sys_GetTimeOfDay(int *tod)
  *  Description: This is the call entry point for the process's info.
  *      
  *
- *  Arguments:    int *info  -- pointer to P1_ProcInfo
+ *  Arguments:    void *info  -- pointer to P1_ProcInfo
  *
  *  Return Value: 
  *      P1_INVALID_PID:     invalid pid
  *      P1_SUCCESS:         success
  *
  */
-int Sys_GetProcInfo(int pid, P1_ProcInfo *info)                           
+int Sys_GetProcInfo(int pid, void *info)                           
 {
     USLOSS_Sysargs sa;
 

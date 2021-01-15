@@ -5,10 +5,6 @@
 #ifndef _LIBUSER_H
 #define _LIBUSER_H
 
-// for P1_ProcInfo, probably should remove this dependency
-#include "phase1.h"
-
-
 #ifndef CHECKRETURN
 #define CHECKRETURN __attribute__((warn_unused_result))
 #endif
@@ -27,7 +23,7 @@ extern int Sys_DiskRead(void *dbuff, int track, int first, int sectors,int unit)
             CHECKRETURN;
 extern int Sys_DiskSize(int unit, int *sector, int *track, int *disk) CHECKRETURN;
 extern void Sys_GetTimeOfDay(int *tod);                           
-extern int Sys_GetProcInfo(int pid, P1_ProcInfo *info) CHECKRETURN;                     
+extern int Sys_GetProcInfo(int pid, void *info) CHECKRETURN;                     
 extern void Sys_GetPID(int *pid);         
 extern int Sys_SemName(int semaphore, char *name)  CHECKRETURN;              
 extern int Sys_SemCreate(char *name, int value, int *semaphore) CHECKRETURN;
