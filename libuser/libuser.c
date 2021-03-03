@@ -86,12 +86,6 @@ int Sys_TermWrite(char *buff, int bsize, int unit_id, int *nwrite)
  *                int  *pid      -- pointer to output value
  *                (output value: process id of the forked process)
  *
- *  Return Value: 
- *      P1_INVALID_PRIORITY:    invalid priority
- *      P1_INVALID_STACK:       stack is too small (see usloss.h)
- *      P1_TOO_MANY_PROCESSES:  no more processes
- *      P1_SUCCESS:             success 
- *
  */
 int Sys_Spawn(char *name, int (*func)(void *), void *arg, int stack_size, int priority, 
     int *pid)   
@@ -120,10 +114,6 @@ int Sys_Spawn(char *name, int (*func)(void *), void *arg, int stack_size, int pr
  *                int *status -- pointer to output value 2
  *                (output value 2: status of the completing child)
  *
- *  Return Value:
- *      P1_NO_CHILDREN:   the process has no children
- *      P1_SUCCESS:       success
- *
  */
 int Sys_Wait(int *pid, int *status) 
 {
@@ -146,10 +136,8 @@ int Sys_Wait(int *pid, int *status)
  *
  *  Arguments:   int status -- the completion status of the process
  *
- *  Return Value: 0 means success, -1 means error occurs
- *
  */
-void Sys_Terminate(int status)
+int Sys_Terminate(int status)
 {
     USLOSS_Sysargs sa;
     
@@ -157,7 +145,7 @@ void Sys_Terminate(int status)
     sa.number = SYS_TERMINATE;
     sa.arg1 = (void *) status;
     USLOSS_Syscall((void *) &sa);
-    return;
+    return (int) sa.arg4;
     
 } 
 
@@ -167,10 +155,6 @@ void Sys_Terminate(int status)
  *  Description: This is the call entry point for timed delay.
  *
  *  Arguments:    int seconds -- number of seconds to sleep
- *
- *  Return Value: 
- *      P2_INVALID_SECONDS: invalid seconds
- *      P1_SUCCESS:         success
  *
  */
 int Sys_Sleep(int seconds)                                 
@@ -190,21 +174,12 @@ int Sys_Sleep(int seconds)
  *  Description: This is the call entry point for disk output.
  *
  *  Arguments:    void* dbuff  -- pointer to the output buffer
- *                int   track  -- first track to write
  *                int   first -- first sector to write
- *        int   sectors -- number of sectors to write
- *        int   unit   -- unit number of the disk
- *
- *  Return Value: 
- *      P1_INVALID_UNIT:        invalid unit
- *      P2_INVALID_TRACK:       invalid track
- *      P2_INVALID_FIRST:       invalid first sector
- *      P2_INVALID_SECTORS:     invalid number of sectors
- *      P2_NULL_ADDRESS:        buffer is NULL
- *      P1_SUCCESS:             success
+ *                int   sectors -- number of sectors to write
+ *                int   unit   -- unit number of the disk
  *
  */
-int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit)
+int Sys_DiskWrite(void *dbuff, int first, int sectors, int unit)
 {
     USLOSS_Sysargs sa;
 
@@ -212,9 +187,8 @@ int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit)
     sa.number = SYS_DISKWRITE;
     sa.arg1 = dbuff;
     sa.arg2 = (void *) sectors;
-    sa.arg3 = (void *) track;
-    sa.arg4 = (void *) first;
-    sa.arg5 = (void *) unit;
+    sa.arg3 = (void *) first;
+    sa.arg4 = (void *) unit;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of DiskWrite */
@@ -225,21 +199,13 @@ int Sys_DiskWrite(void *dbuff, int track, int first, int sectors, int unit)
  *  Description: This is the call entry point for disk input.
  *
  *  Arguments:    void* dbuff  -- pointer to the input buffer
- *                int   track  -- first track to read 
  *                int   first -- first sector to read
- *        int   sectors -- number of sectors to read
- *        int   unit   -- unit number of the disk
+ *                int   sectors -- number of sectors to read
+ *                int   unit   -- unit number of the disk
  *
- *  Return Value:
-*      P1_INVALID_UNIT:        invalid unit
- *      P2_INVALID_TRACK:       invalid track
- *      P2_INVALID_FIRST:       invalid first sector
- *      P2_INVALID_SECTORS:     invalid number of sectors
- *      P2_NULL_ADDRESS:        buffer is NULL
- *      P1_SUCCESS:             success
  *
  */
-int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit)
+int Sys_DiskRead(void *dbuff, int first, int sectors, int unit)
 {
     USLOSS_Sysargs sa;
     
@@ -247,9 +213,8 @@ int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit)
     sa.number = SYS_DISKREAD;
     sa.arg1 = dbuff;
     sa.arg2 = (void *) sectors;
-    sa.arg3 = (void *) track;
-    sa.arg4 = (void *) first;
-    sa.arg5 = (void *) unit;
+    sa.arg3 = (void *) first;
+    sa.arg4 = (void *) unit;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of DiskRead */
@@ -261,17 +226,11 @@ int Sys_DiskRead(void *dbuff, int track, int first, int sectors, int unit)
  *
  *  Arguments:    int   unit  -- the unit number of the disk 
  *                int   *sector -- bytes in a sector
- *        int   *track -- number of sectors in a track
- *                int   *disk  -- number of tracks in the disk
+ *                int   *disk  -- number of sectors in the disk
  *                (output value: completion status)
  *
- *  Return Value: 
- *      P1_INVALID_UNIT:      invalid unit
- *      P2_NULL_ADDRESS:      one of the arguments is NULL
- *      P1_SUCCESS:           success
- *
  */
-int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
+int Sys_DiskSize(int unit, int *sector, int *disk)
 {
     USLOSS_Sysargs sa;
 
@@ -280,8 +239,7 @@ int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
     sa.arg1 = (void *) unit;
     USLOSS_Syscall((void *) &sa);
     *sector = (int) sa.arg1;
-    *track = (int) sa.arg2;
-    *disk = (int) sa.arg3;
+    *disk = (int) sa.arg2;
     return (int) sa.arg4;
 } /* end of DiskSize */
 
@@ -294,7 +252,7 @@ int Sys_DiskSize(int unit, int *sector, int *track, int *disk)
  *                (output value: the time of day)
  *
  */
-void Sys_GetTimeOfDay(int *tod)                           
+int Sys_GetTimeOfDay(int *tod)                           
 {
     USLOSS_Sysargs sa;
     
@@ -302,7 +260,7 @@ void Sys_GetTimeOfDay(int *tod)
     sa.number = SYS_GETTIMEOFDAY;
     USLOSS_Syscall((void *) &sa);
     *tod = (int) sa.arg1;
-    return;
+    return (int) sa.arg4;
 } /* end of GetTimeOfDay */
 
 /*
@@ -312,10 +270,6 @@ void Sys_GetTimeOfDay(int *tod)
  *      
  *
  *  Arguments:    void *info  -- pointer to P1_ProcInfo
- *
- *  Return Value: 
- *      P1_INVALID_PID:     invalid pid
- *      P1_SUCCESS:         success
  *
  */
 int Sys_GetProcInfo(int pid, void *info)                           
@@ -331,7 +285,7 @@ int Sys_GetProcInfo(int pid, void *info)
 } 
 
 /*
- *  Routine:  Sys_GetPID
+ *  Routine:  Sys_GetPid
  *
  *  Description: This is the call entry point for the process' PID.
  *      
@@ -340,7 +294,7 @@ int Sys_GetProcInfo(int pid, void *info)
  *                (output value: the PID)
  *
  */
-void Sys_GetPID(int *pid)                           
+int Sys_GetPid(int *pid)                           
 {
     USLOSS_Sysargs sa;
 
@@ -348,7 +302,7 @@ void Sys_GetPID(int *pid)
     sa.number = SYS_GETPID;
     USLOSS_Syscall((void *) &sa);
     *pid = (int) sa.arg1;
-    return;
+    return (int) sa.arg4;
 } /* end of GetPID */
 
 /*
@@ -359,11 +313,6 @@ void Sys_GetPID(int *pid)
  *
  *  Arguments:    int lid    -- lock id
  *                char *name -- buffer for name to be stored 
- *
- *  Return Value:
- *      P1_INVALID_LID:      the lock id is invalid
- *      P1_NAME_IS_NULL:     name is NULL
- *      P1_SUCCESS:          success
  *
  */
 int Sys_LockName(int lid, char *name)                       
@@ -387,10 +336,6 @@ int Sys_LockName(int lid, char *name)
  *      
  *
  *  Arguments:    int lid    -- lock id
- *
- *  Return Value:
- *      P1_INVALID_LID:      the cond id is invalid
- *      P1_SUCCESS:          success
  *
  */
 int Sys_LockFree(int lid)                       
@@ -424,59 +369,51 @@ int Sys_LockCreate(char *name, int *lid)
 
     CHECKMODE;
     sa.number = SYS_LOCKCREATE;
-    sa.arg1 = (void *) lid;
-    sa.arg2 = (void *) name;
+    sa.arg1 = (void *) name;
     USLOSS_Syscall((void *) &sa);
+    *lid = (int) sa.arg1;
     return (int) sa.arg4;
 } /* end of Sys_LockCreate */
 
 /*
- *  Routine:  Sys_Lock
+ *  Routine:  Sys_LockAcquire
  *
- *  Description: This is the call entry point for locking
+ *  Description: This is the call entry point for acquiring a lock
  *      
  *
  *  Arguments:    int lid    -- lock id
  *
- *  Return Value:
- *      P1_INVALID_LID:      the lock id is invalid
- *      P1_SUCCESS:          success
- *
  */
-int Sys_Lock(int lid)                       
+int Sys_LockAcquire(int lid)                       
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_LOCK;
+    sa.number = SYS_LOCKACQUIRE;
     sa.arg1 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
-} /* end of Sys_Lock */
+} /* end of Sys_LockAcquire */
 
 /*
- *  Routine:  Sys_Unlock
+ *  Routine:  Sys_LockRelease
  *
- *  Description: This is the call entry point for unlocking
+ *  Description: This is the call entry point for releasing a lock.
  *      
  *
  *  Arguments:    int lid    -- lock id
  *
- *  Return Value:
- *      P1_INVALID_LID:      the lock id is invalid
- *      P1_SUCCESS:          success
- *
  */
-int Sys_Unlock(int lid)                       
+int Sys_LockRelease(int lid)                       
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_UNLOCK;
+    sa.number = SYS_LOCKRELEASE;
     sa.arg1 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
-} /* end of Sys_Unlock */
+} /* end of Sys_LockRelease */
 
 /*
  *  Routine:  Sys_CondName
@@ -486,11 +423,6 @@ int Sys_Unlock(int lid)
  *
  *  Arguments:    int vid    -- condition var id
  *                char *name -- buffer for name to be stored 
- *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_NAME_IS_NULL:     name is NULL
- *      P1_SUCCESS:          success
  *
  */
 int Sys_CondName(int vid, char *name)                       
@@ -513,11 +445,6 @@ int Sys_CondName(int vid, char *name)
  *
  *  Arguments:    int vid    -- condition var id
  *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_NAME_IS_NULL:     name is NULL
- *      P1_SUCCESS:          success
- *
  */
 int Sys_CondFree(int vid)                       
 {
@@ -533,26 +460,24 @@ int Sys_CondFree(int vid)
 /*
  *  Routine:  Sys_CondCreate
  *
- *  Description: This is the call entry point for creating a lock
+ *  Description: This is the call entry point for creating a condition variable
  *      
  *
  *  Arguments:    int vid    -- cond var id
+ *                int lid    -- lock id
  *                char *name -- name of the cond var
  *
- *  Return Value:
- *      P1_NAME_IS_NULL:     name is NULL
- *      P1_SUCCESS:          success
- *
  */
-int Sys_CondCreate(char *name, int *vid)
+int Sys_CondCreate(char *name, int lid, int *vid)
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
     sa.number = SYS_CONDCREATE;
-    sa.arg1 = (void *) vid;
-    sa.arg2 = (void *) name;
+    sa.arg1 = (void *) name;
+    sa.arg2 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
+    *vid = (int) sa.arg1;
     return (int) sa.arg4;
 } /* end of Sys_CondCreate */
 
@@ -563,103 +488,58 @@ int Sys_CondCreate(char *name, int *vid)
  *      
  *
  *  Arguments:    int vid    -- condition var id
- *                int lid    -- lock id
- *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_LOCK_NOT_HELD:    lock given is not held
- *      P1_SUCCESS:          success
  *
  */
-int Sys_CondWait(int vid, int lid)                       
+int Sys_CondWait(int vid)                       
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
     sa.number = SYS_CONDWAIT;
     sa.arg1 = (void *) vid;
-    sa.arg2 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of Sys_CondWait */
 
 /*
- *  Routine:  Sys_Signal
+ *  Routine:  Sys_CondSignal
  *
  *  Description: This is the call entry point for signal on cond var
  *      
  *
  *  Arguments:    int vid    -- condition var id
- *                int lid    -- lock id
- *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_LOCK_NOT_HELD:    lock given is not held
- *      P1_SUCCESS:          success
  *
  */
-int Sys_Signal(int vid, int lid)                       
+int Sys_CondSignal(int vid)                       
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_SIGNAL;
+    sa.number = SYS_CONDSIGNAL;
     sa.arg1 = (void *) vid;
-    sa.arg2 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of Sys_Signal */
 
 /*
- *  Routine:  Sys_Broadcast
+ *  Routine:  Sys_CondBroadcast
  *
  *  Description: This is the call entry point for broadcasting signal
  *      
  *
  *  Arguments:    int vid    -- condition var id
- *                int lid    -- lock id
- *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_LOCK_NOT_HELD:    lock given is not held
- *      P1_SUCCESS:          success
  *
  */
-int Sys_Broadcast(int vid, int lid)                       
+int Sys_CondBroadcast(int vid)                       
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
-    sa.number = SYS_BROADCAST;
+    sa.number = SYS_CONDBROADCAST;
     sa.arg1 = (void *) vid;
-    sa.arg2 = (void *) lid;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of Sys_Broadcast */
-
-/*
- *  Routine:  Sys_NakedSignal
- *
- *  Description: This is the call entry point for naked signal on cond var
- *      
- *
- *  Arguments:    int vid    -- condition var id
- *
- *  Return Value:
- *      P1_INVALID_VID:      the cond id is invalid
- *      P1_SUCCESS:          success
- *
- */
-int Sys_NakedSignal(int vid)                       
-{
-    USLOSS_Sysargs sa;
-
-    CHECKMODE;
-    sa.number = SYS_NAKEDSIGNAL;
-    sa.arg1 = (void *) vid;
-    USLOSS_Syscall((void *) &sa);
-    return (int) sa.arg4;
-} /* end of Sys_NakedSignal */
 
 /*
  *  Routine:  Sys_SemName
@@ -838,14 +718,14 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
  *       
  *  Return Value: None
  */
-void Sys_VmShutdown(void)
+int Sys_VmShutdown(void)
 {
     USLOSS_Sysargs sa;
 
     CHECKMODE;
     sa.number = SYS_VMSHUTDOWN;
     USLOSS_Syscall((void *) &sa);
-    return;
+    return (int) sa.arg4;
 }
 
 

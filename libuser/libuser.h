@@ -15,16 +15,16 @@ extern int Sys_TermWrite(char *buff, int bsize, int unit, int *nwrite) CHECKRETU
 extern int Sys_Spawn(char *name, int (*func)(void *), void *arg, int stack_size, 
         int priority, int *pid) CHECKRETURN;   
 extern int Sys_Wait(int *pid, int *status) CHECKRETURN;
-extern void Sys_Terminate(int status);
+extern int Sys_Terminate(int status);
 extern int Sys_Sleep(int seconds) CHECKRETURN;                  
-extern int Sys_DiskWrite(void *dbuff, int track, int first,int sectors,int unit)
+extern int Sys_DiskWrite(void *dbuff, int first,int sectors,int unit)
             CHECKRETURN;
-extern int Sys_DiskRead(void *dbuff, int track, int first, int sectors,int unit)
+extern int Sys_DiskRead(void *dbuff, int first, int sectors,int unit)
             CHECKRETURN;
-extern int Sys_DiskSize(int unit, int *sector, int *track, int *disk) CHECKRETURN;
-extern void Sys_GetTimeOfDay(int *tod);                           
+extern int Sys_DiskSize(int unit, int *sector, int *disk) CHECKRETURN;
+extern int Sys_GetTimeOfDay(int *tod);                           
 extern int Sys_GetProcInfo(int pid, void *info) CHECKRETURN;                     
-extern void Sys_GetPID(int *pid);         
+extern int Sys_GetPid(int *pid);         
 extern int Sys_SemName(int semaphore, char *name)  CHECKRETURN;              
 extern int Sys_SemCreate(char *name, int value, int *semaphore) CHECKRETURN;
 extern int Sys_SemP(int semaphore) CHECKRETURN;
@@ -33,18 +33,17 @@ extern int Sys_SemFree(int semaphore) CHECKRETURN;
 extern int Sys_LockCreate(char *name, int *lid) CHECKRETURN;
 extern int Sys_LockFree(int lid) CHECKRETURN;
 extern int Sys_LockName(int lid, char *name) CHECKRETURN;
-extern int Sys_Lock(int lid) CHECKRETURN;
-extern int Sys_Unlock(int lid) CHECKRETURN;
-extern int Sys_CondCreate(char *name, int *vid) CHECKRETURN;
+extern int Sys_LockAcquire(int lid) CHECKRETURN;
+extern int Sys_LockRelease(int lid) CHECKRETURN;
+extern int Sys_CondCreate(char *name, int lid, int *vid) CHECKRETURN;
 extern int Sys_CondFree(int vid) CHECKRETURN;
 extern int Sys_CondName(int vid, char *name) CHECKRETURN;
-extern int Sys_CondWait(int vid, int lid) CHECKRETURN;
-extern int Sys_Signal(int vid, int lid) CHECKRETURN;
-extern int Sys_NakedSignal(int vid) CHECKRETURN;
-extern int Sys_Broadcast(int vid, int lid) CHECKRETURN;
+extern int Sys_CondWait(int vid) CHECKRETURN;
+extern int Sys_CondSignal(int vidd) CHECKRETURN;
+extern int Sys_ConeBroadcast(int vid) CHECKRETURN;
 
 extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region) CHECKRETURN;
-extern void Sys_VmShutdown(void);
+extern int Sys_VmShutdown(void);
 /*
  * Phase 3 extra credit.
  */
