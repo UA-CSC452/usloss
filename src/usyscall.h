@@ -32,23 +32,22 @@
 #define SYS_LOCKCREATE      24
 #define SYS_LOCKFREE        25
 #define SYS_LOCKNAME        26
-#define SYS_LOCK            27
-#define SYS_UNLOCK          28
+#define SYS_LOCKACQUIRE     27
+#define SYS_LOCKRELEASE     28
 #define SYS_CONDCREATE      29
 #define SYS_CONDFREE        30
 #define SYS_CONDNAME        31
 #define SYS_CONDWAIT        32
-#define SYS_SIGNAL          33
-#define SYS_NAKEDSIGNAL     34
-#define SYS_BROADCAST       35
+#define SYS_CONDSIGNAL      33
+#define SYS_CONDBROADCAST   34
 
-#define SYS_VMINIT          36
-#define SYS_VMSHUTDOWN      37
-#define SYS_HEAPALLOC       38
-#define SYS_HEAPFREE        39
-#define SYS_PROTECT         40
-#define SYS_SHARE           41
-#define SYS_COW             42
+#define SYS_VMINIT          35
+#define SYS_VMSHUTDOWN      36
+#define SYS_HEAPALLOC       37
+#define SYS_HEAPFREE        38
+#define SYS_PROTECT         39
+#define SYS_SHARE           40
+#define SYS_COW             41
 
 // Leave some room for growth
 
