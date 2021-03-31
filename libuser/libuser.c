@@ -313,9 +313,10 @@ int Sys_GetPid(int *pid)
  *
  *  Arguments:    int lid    -- lock id
  *                char *name -- buffer for name to be stored 
+ *                int len    -- buffer size
  *
  */
-int Sys_LockName(int lid, char *name)                       
+int Sys_LockName(int lid, char *name, int len)                       
 {
     USLOSS_Sysargs sa;
 
@@ -323,6 +324,7 @@ int Sys_LockName(int lid, char *name)
     sa.number = SYS_LOCKNAME;
     sa.arg1 = (void *) lid;
     sa.arg2 = (void *) name;
+    sa.arg3 = (void *) len;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of Sys_LockName */
@@ -422,10 +424,11 @@ int Sys_LockRelease(int lid)
  *      
  *
  *  Arguments:    int vid    -- condition var id
- *                char *name -- buffer for name to be stored 
+ *                char *name -- buffer for name to be stored
+ *                int len    -- buffer size 
  *
  */
-int Sys_CondName(int vid, char *name)                       
+int Sys_CondName(int vid, char *name, int len)               
 {
     USLOSS_Sysargs sa;
 
@@ -433,6 +436,7 @@ int Sys_CondName(int vid, char *name)
     sa.number = SYS_CONDNAME;
     sa.arg1 = (void *) vid;
     sa.arg2 = (void *) name;
+    sa.arg3 = (void *) len;
     USLOSS_Syscall((void *) &sa);
     return (int) sa.arg4;
 } /* end of Sys_CondName */
