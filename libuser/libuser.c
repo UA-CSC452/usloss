@@ -706,7 +706,7 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region, i
     sa.arg4 = (void *) pagers;
     USLOSS_Syscall((void *) &sa);
     rc = (int) sa.arg4;
-    if (rc == P1_SUCCESS) {
+    if (rc == 0) {
         *region = sa.arg1;
         *pageSize = (int) sa.arg2;
     }
