@@ -693,7 +693,7 @@ int Sys_SemFree(int semaphore)
  *                0 otherwise
  */
 
-int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
+int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region, int *pageSize)
 {
     USLOSS_Sysargs sa;
     int        rc;
@@ -706,8 +706,9 @@ int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region)
     sa.arg4 = (void *) pagers;
     USLOSS_Syscall((void *) &sa);
     rc = (int) sa.arg4;
-    if (rc == 0) {
+    if (rc == P1_SUCCESS) {
         *region = sa.arg1;
+        *pageSize = (int) sa.arg2;
     }
     return rc;
 }

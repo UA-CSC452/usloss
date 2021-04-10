@@ -42,7 +42,8 @@ extern int Sys_CondWait(int vid) CHECKRETURN;
 extern int Sys_CondSignal(int vid) CHECKRETURN;
 extern int Sys_CondBroadcast(int vid) CHECKRETURN;
 
-extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region) CHECKRETURN;
+extern int Sys_VmInit(int mappings, int pages, int frames, int pagers, void **region, 
+                      int *pageSize) CHECKRETURN;
 extern int Sys_VmShutdown(void);
 /*
  * Phase 3 extra credit.
