@@ -187,7 +187,7 @@ startup(int argc, char **argv)
 
     // 2 entries per page table, 2 pages, 2 page frames
 
-    status = USLOSS_MmuInit(NUMPAGES, NUMPAGES, NUMPAGES, USLOSS_MMU_MODE_PAGETABLE);
+    status = USLOSS_MmuInit(0, NUMPAGES, NUMPAGES, USLOSS_MMU_MODE_PAGETABLE);
     assert(status == USLOSS_MMU_OK);
     status = USLOSS_MmuGetConfig((void **)&segment, NULL, &pageSize, &pages, NULL, NULL);
     assert(status == USLOSS_MMU_OK);

@@ -137,12 +137,14 @@ USLOSS_MmuInit(numMaps, numPages, numFrames, mode)
     if (numFrames < 1) {
         return USLOSS_MMU_ERR_FRAME;
     }
-    if ((numMaps < 1) || (numMaps > (numPages * USLOSS_MMU_NUM_TAG))) {
-        return USLOSS_MMU_ERR_MAPS;
-    }
     switch (mode) {
         case USLOSS_MMU_MODE_PAGETABLE:
+            numMaps = numPages;
+            break;
         case USLOSS_MMU_MODE_TLB:
+            if ((numMaps < 1) || (numMaps > (numPages * USLOSS_MMU_NUM_TAG))) {
+                return USLOSS_MMU_ERR_MAPS;
+            }
             break;
         default:
             return USLOSS_MMU_ERR_MODE;
