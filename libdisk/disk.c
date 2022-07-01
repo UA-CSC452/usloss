@@ -14,8 +14,6 @@
 #include "libdisk.h"
 
 
-char	track[USLOSS_DISK_TRACK_SIZE * USLOSS_DISK_SECTOR_SIZE];
-
 /*
  * Disk_Create
  *
