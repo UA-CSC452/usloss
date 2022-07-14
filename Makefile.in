@@ -23,7 +23,7 @@ tar: $(TARBALL)
 
 $(TARBALL): distclean
 	rm -f $(TARBALL)
-	(cd ..; gnutar cvzf /tmp/$(TARBALL) --exclude=CVS --exclude="Mx.*" --exclude="*usloss*.tgz" --exclude=docs --exclude=test --exclude="*.save" --exclude=build --exclude=todo --exclude=.git --exclude=.gitignore --exclude=".*" --exclude="*.dSYM" --exclude="*.out" usloss)
+	(cd ..; tar cvzf /tmp/$(TARBALL) --exclude=CVS --exclude="Mx.*" --exclude="*usloss*.tgz" --exclude=docs --exclude=test --exclude="*.save" --exclude=build --exclude=todo --exclude=.git --exclude=.gitignore --exclude=".*" --exclude="*.dSYM" --exclude="*.out" usloss)
 	cp /tmp/$(TARBALL) .
 
 clean: $(SUBDIRS)
