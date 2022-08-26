@@ -16,6 +16,7 @@ CFLAGS += -DMMU
 CFLAGS += -Wno-deprecated-declarations 
 CFLAGS += -Wno-pointer-to-int-cast
 CFLAGS += -Wno-int-to-pointer-cast
+CFLAGS += -Wno-unused-but-set-variable
 CFLAGS += -Werror
 #CFLAGS += -DDEBUG
 CFLAGS += -g
