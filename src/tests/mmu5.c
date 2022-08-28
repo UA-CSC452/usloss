@@ -42,7 +42,7 @@ startup(int argc, char **argv)
     //  check that initial val is 8, then test write
     int i;
     for (i = 0; i < (NUM_FRAMES * size); i++) {
-        assert(pmem[i] = '8');
+        assert(pmem[i] == '8');
         pmem[i] = 'A';
         assert(pmem[i] == 'A');
     }
