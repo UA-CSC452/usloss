@@ -49,6 +49,8 @@
 #define SYS_SHARE           40
 #define SYS_COW             41
 
+#define SYS_DUMPPROCESSES   42
+
 // Leave some room for growth
 
 #define USLOSS_MAX_SYSCALLS 50
