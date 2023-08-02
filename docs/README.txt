@@ -1,1 +1,0 @@
-USLOSS documentation is currently in Google Docs.
